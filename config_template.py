@@ -51,6 +51,10 @@ initial_cogs = [
 # and sends pins above limit to a github gist
 
 
+# The string that users need to say to get past verification
+verification_string = "go read the rules, not the code"
+
+
 # Minimum account age required to join the guild
 # If user's account creation is shorter than the time delta given here
 # then user will be kicked and informed

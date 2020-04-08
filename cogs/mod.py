@@ -471,19 +471,13 @@ class Mod(Cog):
         if warn_count == 3:
             msg += (
                 "\n\nYou were kicked because of this warning. "
-                "You can join again right away. "
-                "Two more warnings will result in an automatic ban."
-            )
-        if warn_count == 4:
-            msg += (
-                "\n\nYou were kicked because of this warning. "
                 "This is your final warning. "
                 "You can join again, but "
                 "**one more warn will result in a ban**."
             )
             chan_msg += "**This resulted in an auto-kick.**\n"
-        if warn_count == 5:
-            msg += "\n\nYou were automatically banned due to five warnings."
+        if warn_count == 4:
+            msg += "\n\nYou were automatically banned due to four warnings."
             chan_msg += "**This resulted in an auto-ban.**\n"
         try:
             await target.send(msg)
@@ -491,9 +485,9 @@ class Mod(Cog):
             # Prevents log issues in cases where user blocked bot
             # or has DMs disabled
             pass
-        if warn_count == 3 or warn_count == 4:
+        if warn_count == 3:
             await target.kick()
-        if warn_count >= 5:  # just in case
+        if warn_count >= 4:  # just in case
             await target.ban(reason="exceeded warn limit", delete_message_days=0)
         await ctx.send(
             f"{target.mention} warned. " f"User has {warn_count} warning(s)."
