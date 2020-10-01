@@ -46,7 +46,11 @@ wanted_jsons = [
     "data/invites.json",
 ]
 
-bot = commands.Bot(command_prefix=get_prefix, description=config.bot_description)
+intents = discord.Intents.default()
+intents.typing = False
+intents.members = True
+
+bot = commands.Bot(command_prefix=get_prefix, description=config.bot_description, intents=intents)
 bot.help_command = commands.DefaultHelpCommand(dm_help=True)
 
 bot.log = log
@@ -226,8 +230,4 @@ for wanted_json in wanted_jsons:
         with open(wanted_json, "w") as f:
             f.write("{}")
 
-intents = discord.Intents.default()
-intents.typing = False
-intents.members = True
-
-bot.run(config.token, bot=True, reconnect=True, intents=intents)
+bot.run(config.token, bot=True, reconnect=True)
