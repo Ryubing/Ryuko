@@ -226,4 +226,8 @@ for wanted_json in wanted_jsons:
         with open(wanted_json, "w") as f:
             f.write("{}")
 
-bot.run(config.token, bot=True, reconnect=True)
+intents = discord.Intents.default()
+intents.typing = False
+intents.members = True
+
+bot.run(config.token, bot=True, reconnect=True, intents=intents)

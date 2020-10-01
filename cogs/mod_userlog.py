@@ -230,7 +230,6 @@ class ModUserlog(Cog):
             f"created_at = {user.created_at}\n"
             f"display_name = {display_name}\n"
             f"joined_at = {user.joined_at}\n"
-            f"activities = `{user.activities}`\n"
             f"color = {user.colour}\n"
             f"top_role = {role}\n",
             embed=embed,
