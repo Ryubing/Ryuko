@@ -8,6 +8,8 @@ import config
 
 import discord
 from discord.ext import commands
+from cogs.logfilereader import LogFileReader
+
 
 script_name = os.path.basename(__file__).split(".")[0]
 
@@ -50,7 +52,9 @@ intents = discord.Intents.default()
 intents.typing = False
 intents.members = True
 
-bot = commands.Bot(command_prefix=get_prefix, description=config.bot_description, intents=intents)
+bot = commands.Bot(
+    command_prefix=get_prefix, description=config.bot_description, intents=intents
+)
 bot.help_command = commands.DefaultHelpCommand(dm_help=True)
 
 bot.log = log
@@ -217,6 +221,15 @@ async def on_message(message):
         cmd in message.content for cmd in welcome_allowed
     ):
         return
+
+    # if message has an attachment
+    try:
+        if message.attachments[0]:
+            # return message so that author and relevant data can be used
+            embed = await LogFileReader.log_file_read(message)
+            return await message.channel.send(embed = embed)
+    except IndexError:
+        pass
 
     ctx = await bot.get_context(message)
     await bot.invoke(ctx)
