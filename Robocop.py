@@ -225,11 +225,15 @@ async def on_message(message):
     # if message has an attachment
     try:
         if message.attachments[0]:
-            # return message so that author and relevant data can be used
-            embed = await LogFileReader.log_file_read(message)
-            return await message.channel.send(embed = embed)
+            reader = LogFileReader(bot)
+            embed = await reader.log_file_read(message)
+            return await message.channel.send(embed=embed)
     except IndexError:
         pass
+    except UnicodeDecodeError:
+        return await message.channel.send(
+            f"This log file appears to be invalid {message.author.mention}. Please re-check and re-upload your log file."
+        )
 
     ctx = await bot.get_context(message)
     await bot.invoke(ctx)
