@@ -61,6 +61,8 @@ bot.log = log
 bot.config = config
 bot.script_name = script_name
 bot.wanted_jsons = wanted_jsons
+bot.uploaded_log_filenames = []
+
 
 if __name__ == "__main__":
     for cog in config.initial_cogs:
@@ -221,13 +223,21 @@ async def on_message(message):
         cmd in message.content for cmd in welcome_allowed
     ):
         return
-
     # if message has an attachment
     try:
-        if message.attachments[0]:
+        filename = message.attachments[0].filename
+        if message.attachments[0] and filename not in bot.uploaded_log_filenames:
             reader = LogFileReader(bot)
             embed = await reader.log_file_read(message)
+            bot.uploaded_log_filenames.append(filename)
+            # Avoid duplicate log file analysis, at least temporarily; keep track of the last few filenames of uploaded logs
+            # this should help support channels not be flooded with too many log files
+            bot.uploaded_log_filenames = bot.uploaded_log_filenames[-5:]
             return await message.channel.send(embed=embed)
+        else:
+            return await message.channel.send(
+                f"The log file `{filename}` appears to be a duplicate {message.author.mention}. Please upload a more recent file."
+            )
     except IndexError:
         pass
     except UnicodeDecodeError:
