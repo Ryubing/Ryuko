@@ -3,14 +3,14 @@ import discord
 from discord.ext.commands import Cog
 import re
 import aiohttp
+import config
 
 
 class LogFileReader(Cog):
     def __init__(self, bot):
         self.bot = bot
         # Allows log analysis in #support and #patreon-support channels respectively
-        # self.log_allowed_channels = [410208610455519243, 692449072107225108]
-        self.log_allowed_channels = [818828123461386260]
+        self.bot_log_allowed_channels = config.bot_log_allowed_channels
         self.uploaded_log_filenames = []
 
     async def download_file(self, log_url):
@@ -181,7 +181,7 @@ class LogFileReader(Cog):
             filename = message.attachments[0].filename
             log_file_regex = re.compile(r"^Ryujinx_.*\.log|message\.txt$")
             is_log_file = re.match(log_file_regex, filename)
-            if message.channel.id in self.log_allowed_channels and is_log_file:
+            if message.channel.id in self.bot_log_allowed_channels and is_log_file:
                 if filename not in self.uploaded_log_filenames:
                     embed = await self.log_file_read(message)
                     if "Ryujinx_" in filename:
@@ -200,7 +200,7 @@ class LogFileReader(Cog):
                 )
             else:
                 return await message.channel.send(
-                    f"{author} Please upload log files to {' or '.join([f'<#{id}>' for id in self.log_allowed_channels])}"
+                    f"{author} Please upload log files to {' or '.join([f'<#{id}>' for id in self.bot_log_allowed_channels])}"
                 )
         except IndexError:
             pass
