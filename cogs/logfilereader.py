@@ -15,7 +15,7 @@ class LogFileReader(Cog):
 
     async def download_file(self, log_url):
         async with aiohttp.ClientSession() as session:
-            # grabs first and last 4kB of log file to prevent abuse from large files
+            # grabs first and last few bytes of log file to prevent abuse from large files
             headers = {"Range": "bytes=0-20000, -6000"}
             async with session.get(log_url, headers=headers) as response:
                 return await response.text("UTF-8")
@@ -24,6 +24,10 @@ class LogFileReader(Cog):
         attached_log = message.attachments[0]
         author = f"@{message.author.name}"
         log_file = await self.download_file(attached_log.url)
+        # Large files show a header value when not downlodaed completely
+        # this regex makes sure that the log text to read starts from the first timestamp, ignoring headers
+        log_file_header_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}.*", re.DOTALL)
+        log_file = re.search(log_file_header_regex, log_file).group(0)
 
         regex_map = {
             "Ryu_Version": "Ryujinx Version",
@@ -87,10 +91,12 @@ class LogFileReader(Cog):
                     errors = []
                     curr_error_lines = []
                     for line in log_file.splitlines():
+                        if line == "":
+                            continue
                         if "|E|" in line:
                             curr_error_lines = [line]
                             errors.append(curr_error_lines)
-                        elif line[0] == " ":
+                        elif line[0] == " " or line == "":
                             curr_error_lines.append(line)
                     last_errors = "\n".join(
                         errors[-1][:2] if "|E|" in errors[-1][0] else ""
