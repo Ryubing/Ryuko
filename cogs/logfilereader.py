@@ -163,7 +163,7 @@ class LogFileReader(Cog):
                 logs_status = [f"⚠️ {log} log is not enabled" for log in disabled_logs]
                 log_string = "\n".join(logs_status)
             else:
-                log_string = "ℹ️ Default logs enabled"
+                log_string = "✅ Default logs enabled"
             notes.append(log_string)
             log_embed.add_field(
                 name="Notes",
