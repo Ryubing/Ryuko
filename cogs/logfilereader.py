@@ -207,8 +207,10 @@ class LogFileReader(Cog):
                             self.uploaded_log_filenames = self.uploaded_log_filenames[
                                 -5:
                             ]
-                        return await reply_message.channel.edit(
-                            content=None, embed=embed
+                        return await reply_message.edit(content=None, embed=embed)
+                    except UnicodeDecodeError:
+                        return await message.channel.send(
+                            f"This log file appears to be invalid {author}. Please re-check and re-upload your log file."
                         )
                     except Exception as error:
                         await reply_message.edit(
@@ -229,10 +231,6 @@ class LogFileReader(Cog):
                 )
         except IndexError:
             pass
-        except UnicodeDecodeError:
-            return await message.channel.send(
-                f"This log file appears to be invalid {author}. Please re-check and re-upload your log file."
-            )
 
 
 def setup(bot):
