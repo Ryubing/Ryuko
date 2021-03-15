@@ -1,9 +1,15 @@
-from logging import log
+from inspect import Traceback
+import logging
 import discord
 from discord.ext.commands import Cog
 import re
 import aiohttp
 import config
+
+logging.basicConfig(
+    format="%(asctime)s (%(levelname)s) %(message)s (Line %(lineno)d)",
+    level=logging.DEBUG,
+)
 
 
 class LogFileReader(Cog):
@@ -15,7 +21,7 @@ class LogFileReader(Cog):
 
     async def download_file(self, log_url):
         async with aiohttp.ClientSession() as session:
-            # grabs first and last few bytes of log file to prevent abuse from large files
+            # Grabs first and last few bytes of log file to prevent abuse from large files
             headers = {"Range": "bytes=0-20000, -6000"}
             async with session.get(log_url, headers=headers) as response:
                 return await response.text("UTF-8")
@@ -41,7 +47,7 @@ class LogFileReader(Cog):
         }
 
         def make_regex_obj(key, value):
-            # since RAM values in log are structured as "RAM: Total 16297 MB ;", regex tries to account for the unneeded 'Total' string
+            # Since RAM values in log are structured as "RAM: Total 16297 MB ;", regex tries to account for the unneeded 'Total' string
             return re.compile(fr"{value}:(\sTotal)?\s(?P<{key}>[^;\r]*)", re.MULTILINE)
 
         def find_specs(body, key, regexobj):
@@ -105,7 +111,7 @@ class LogFileReader(Cog):
                     last_errors = None
                 return last_errors
 
-            # finds the lastest error denoted by |E| in the log and its first line
+            # Finds the lastest error denoted by |E| in the log and its first line
             error_message = find_error_message(log_file)
             if error_message:
                 error_info = f"```{error_message}```"
@@ -117,7 +123,7 @@ class LogFileReader(Cog):
                 inline=False,
             )
 
-            # find information on installed mods
+            # Find information on installed mods
             game_mods = mods_information(log_file)
             if game_mods:
                 mods_info = "\n".join(game_mods)
@@ -125,7 +131,7 @@ class LogFileReader(Cog):
                 mods_info = "No mods found"
             log_embed.add_field(name="Mods", value=mods_info, inline=False)
 
-            # generic checks to notify user about
+            # Generic checks to notify user about
             notes = []
 
             controllers_regex = re.compile(r"Hid Configure: ([^\r\n]+)")
@@ -155,7 +161,7 @@ class LogFileReader(Cog):
                     intel_gpu_warning = f"**❌ Intel iGPUs are not supported**"
                     notes.append(intel_gpu_warning)
 
-            # find information on logs, whether defaults are enabled or not
+            # Find information on logs, whether defaults are enabled or not
             default_logs = ["Info", "Warning", "Error", "Guest", "Stub"]
             user_logs = log_info["Logs_Enabled"].rstrip().replace(" ", "").split(",")
             disabled_logs = set(default_logs).difference(set(user_logs))
@@ -189,15 +195,28 @@ class LogFileReader(Cog):
             is_log_file = re.match(log_file_regex, filename)
             if message.channel.id in self.bot_log_allowed_channels and is_log_file:
                 if filename not in self.uploaded_log_filenames:
-                    embed = await self.log_file_read(message)
-                    if "Ryujinx_" in filename:
-                        self.uploaded_log_filenames.append(filename)
-                        # Avoid duplicate log file analysis, at least temporarily; keep track of the last few filenames of uploaded logs
-                        # this should help support channels not be flooded with too many log files
-                        self.uploaded_log_filenames = self.uploaded_log_filenames[-5:]
-                    return await message.channel.send(embed=embed)
+                    reply_message = await message.channel.send(
+                        "Log detected, parsing..."
+                    )
+                    try:
+                        embed = await self.log_file_read(message)
+                        if "Ryujinx_" in filename:
+                            self.uploaded_log_filenames.append(filename)
+                            # Avoid duplicate log file analysis, at least temporarily; keep track of the last few filenames of uploaded logs
+                            # this should help support channels not be flooded with too many log files
+                            self.uploaded_log_filenames = self.uploaded_log_filenames[
+                                -5:
+                            ]
+                        return await reply_message.channel.edit(
+                            content=None, embed=embed
+                        )
+                    except Exception as error:
+                        await reply_message.edit(
+                            content=f"Error: Couldn't parse log; parser threw {type(error).__name__} exception."
+                        )
+                        print(logging.warn(error))
                 else:
-                    return await message.channel.send(
+                    await message.channel.send(
                         f"The log file `{filename}` appears to be a duplicate {author}. Please upload a more recent file."
                     )
             elif not is_log_file:
