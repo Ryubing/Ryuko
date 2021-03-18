@@ -157,7 +157,7 @@ class LogFileReader(Cog):
             )
             log_embed.add_field(
                 name="Notes",
-                value="\n".join([note for note in self.embed["game_info"]["notes"]]),
+                value="\n".join(game_notes),
                 inline=False,
             )
 
@@ -272,9 +272,20 @@ class LogFileReader(Cog):
                 log_string = "✅ Default logs enabled"
             self.embed["game_info"]["notes"].append(log_string)
 
+            def severity(log_note_string):
+                symbols = ["❌", "⚠️", "ℹ", "✅"]
+                return next(
+                    i for i, symbol in enumerate(symbols) if symbol in log_note_string
+                )
+
+            game_notes = [note for note in self.embed["game_info"]["notes"]]
+            ordered_game_notes = sorted(game_notes, key=severity)
+
+            return ordered_game_notes
+
         get_hardware_info(log_file)
         get_ryujinx_info(log_file)
-        analyse_log(log_file)
+        game_notes = analyse_log(log_file)
 
         return format_log_embed()
 
@@ -302,9 +313,9 @@ class LogFileReader(Cog):
                             self.uploaded_log_filenames.append(filename)
                             # Avoid duplicate log file analysis, at least temporarily; keep track of the last few filenames of uploaded logs
                             # this should help support channels not be flooded with too many log files
-                            self.uploaded_log_filenames = self.uploaded_log_filenames[
-                                -5:
-                            ]
+                            # fmt: off
+                            self.uploaded_log_filenames = self.uploaded_log_filenames[-5:]
+                            # fmt: on
                         return await reply_message.edit(content=None, embed=embed)
                     except UnicodeDecodeError:
                         return await message.channel.send(
