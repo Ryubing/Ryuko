@@ -22,7 +22,7 @@ class LogFileReader(Cog):
     async def download_file(self, log_url):
         async with aiohttp.ClientSession() as session:
             # Grabs first and last few bytes of log file to prevent abuse from large files
-            headers = {"Range": "bytes=0-20000, -6000"}
+            headers = {"Range": "bytes=0-25000, -6000"}
             async with session.get(log_url, headers=headers) as response:
                 return await response.text("UTF-8")
 
@@ -47,6 +47,9 @@ class LogFileReader(Cog):
             },
             "user_settings": {
                 "pptc": "Unknown",
+                "audio_backend": "Unknown",
+                "docked": "Unknown",
+                "vsync": "Unknown",
             },
         }
         attached_log = message.attachments[0]
@@ -85,21 +88,24 @@ class LogFileReader(Cog):
                 pass
 
         def get_ryujinx_info(log_file):
-            self.embed["emu_info"]["ryu_version"] = (
-                re.search(r"Ryujinx Version:\s([^;\r]*)", log_file, re.MULTILINE)
-                .group(1)
-                .rstrip()
-            )
-            self.embed["emu_info"]["ryu_firmware"] = (
-                re.search(r"Firmware Version:\s([^;\r]*)", log_file, re.MULTILINE)
-                .group(1)
-                .rstrip()
-            )
-            self.embed["emu_info"]["logs_enabled"] = (
-                re.search(r"Logs Enabled:\s([^;\r]*)", log_file, re.MULTILINE)
-                .group(1)
-                .rstrip()
-            )
+            try:
+                self.embed["emu_info"]["ryu_version"] = [
+                    line.split()[-1]
+                    for line in log_file.splitlines()
+                    if "Ryujinx Version:" in line
+                ][0]
+                self.embed["emu_info"]["ryu_firmware"] = [
+                    line.split()[-1]
+                    for line in log_file.splitlines()
+                    if "Firmware Version:" in line
+                ][0]
+                self.embed["emu_info"]["logs_enabled"] = (
+                    re.search(r"Logs Enabled:\s([^;\r]*)", log_file, re.MULTILINE)
+                    .group(1)
+                    .rstrip()
+                )
+            except AttributeError:
+                pass
 
         def format_log_embed():
             cleaned_game_name = re.sub(
@@ -117,7 +123,12 @@ class LogFileReader(Cog):
             )
 
             user_settings_info = "\n".join(
-                (f"**PPTC:** {self.embed['user_settings']['pptc']}",)
+                (
+                    f"**Audio Backend:** `{self.embed['user_settings']['audio_backend']}`",
+                    f"**Switch Mode:** `{self.embed['user_settings']['docked']}`",
+                    f"**PPTC:** `{self.embed['user_settings']['pptc']}`",
+                    f"**V-Sync:** `{self.embed['user_settings']['vsync']}`",
+                )
             )
 
             ryujinx_info = "\n".join(
@@ -173,14 +184,47 @@ class LogFileReader(Cog):
                 .group(1)
                 .rstrip()
             )
+            try:
+                pptc_setting = re.search(
+                    r"Ptc Initialize:.+\(enabled:\s(.+?)\)[^;\r]",
+                    log_file,
+                    re.MULTILINE,
+                ).group(1)
+                if pptc_setting:
+                    self.embed["user_settings"][
+                        "pptc"
+                    ] = f"{'Enabled' if pptc_setting == 'True' else 'Disabled'}"
 
-            pptc_setting = re.search(
-                r"Ptc Initialize:.+\(enabled:\s(.+?)\)[^;\r]", log_file, re.MULTILINE
-            ).group(1)
-            if pptc_setting == "True":
-                self.embed["user_settings"]["pptc"] = "Enabled"
-            else:
-                self.embed["user_settings"]["pptc"] = "Disabled"
+                audio_setting = [
+                    line.split()[-1]
+                    for line in log_file.splitlines()
+                    if "AudioBackend" in line
+                ][-1]
+                if audio_setting:
+                    self.embed["user_settings"]["audio_backend"] = audio_setting
+
+                switch_mode = [
+                    line.split()[-1]
+                    for line in log_file.splitlines()
+                    if "IsDocked" in line
+                ][-1]
+                if switch_mode:
+                    self.embed["user_settings"][
+                        "docked"
+                    ] = f"{'Docked' if switch_mode == 'True' else 'Handheld'}"
+
+                # Take note of the difference between 'Vsync' and 'VSyncStatus' capitalization in both initial and toggle settings
+                vsync_setting = [
+                    line.split()[-1]
+                    for line in log_file.splitlines()
+                    if "Vsync" in line or "VSyncStatus_Clicked" in line
+                ][-1]
+                if vsync_setting:
+                    self.embed["user_settings"][
+                        "vsync"
+                    ] = f"{'Enabled' if vsync_setting == 'True' else 'Disabled'}"
+            except (AttributeError, IndexError):
+                pass
 
             def find_error_message(log_file):
                 try:
@@ -230,6 +274,9 @@ class LogFileReader(Cog):
             controllers = re.findall(controllers_regex, log_file)
             if controllers:
                 input_status = [f"ℹ {match}" for match in controllers]
+                # Hid Configure lines can appear multiple times, so converting to dict keys removes duplicate entries,
+                # also maintains the list order
+                input_status = list(dict.fromkeys(input_status))
                 input_string = "\n".join(input_status)
             else:
                 input_string = "⚠️ No controller information found"
