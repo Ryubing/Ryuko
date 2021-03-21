@@ -45,12 +45,14 @@ class LogFileReader(Cog):
                 "mods": "No mods found",
                 "notes": [],
             },
-            "user_settings": {
-                "pptc": "Unknown",
-                "audio_backend": "Unknown",
-                "docked": "Unknown",
-                "vsync": "Unknown",
-            },
+            "user_settings": [
+                {
+                    "pptc": "Unknown",
+                    "audio_backend": "Unknown",
+                    "docked": "Unknown",
+                    "vsync": "Unknown",
+                }
+            ],
         }
         attached_log = message.attachments[0]
         author_name = f"@{message.author.name}"
@@ -94,17 +96,17 @@ class LogFileReader(Cog):
                     for line in log_file.splitlines()
                     if "Ryujinx Version:" in line
                 ][0]
-                self.embed["emu_info"]["ryu_firmware"] = [
-                    line.split()[-1]
-                    for line in log_file.splitlines()
-                    if "Firmware Version:" in line
-                ][0]
                 self.embed["emu_info"]["logs_enabled"] = (
                     re.search(r"Logs Enabled:\s([^;\r]*)", log_file, re.MULTILINE)
                     .group(1)
                     .rstrip()
                 )
-            except AttributeError:
+                self.embed["emu_info"]["ryu_firmware"] = [
+                    line.split()[-1]
+                    for line in log_file.splitlines()
+                    if "Firmware Version:" in line
+                ][0]
+            except (AttributeError, IndexError):
                 pass
 
         def format_log_embed():
@@ -124,10 +126,10 @@ class LogFileReader(Cog):
 
             user_settings_info = "\n".join(
                 (
-                    f"**Audio Backend:** `{self.embed['user_settings']['audio_backend']}`",
-                    f"**Switch Mode:** `{self.embed['user_settings']['docked']}`",
-                    f"**PPTC:** `{self.embed['user_settings']['pptc']}`",
-                    f"**V-Sync:** `{self.embed['user_settings']['vsync']}`",
+                    f"**Audio Backend:** `{self.embed['user_settings'][0]['audio_backend']}`",
+                    f"**Console Mode:** `{self.embed['user_settings'][0]['docked']}`",
+                    f"**PPTC:** `{self.embed['user_settings'][0]['pptc']}`",
+                    f"**V-Sync:** `{self.embed['user_settings'][0]['vsync']}`",
                 )
             )
 
@@ -184,47 +186,51 @@ class LogFileReader(Cog):
                 .group(1)
                 .rstrip()
             )
-            try:
-                pptc_setting = re.search(
-                    r"Ptc Initialize:.+\(enabled:\s(.+?)\)[^;\r]",
-                    log_file,
-                    re.MULTILINE,
-                ).group(1)
-                if pptc_setting:
-                    self.embed["user_settings"][
-                        "pptc"
-                    ] = f"{'Enabled' if pptc_setting == 'True' else 'Disabled'}"
+            for setting in self.embed["user_settings"]:
+                # Some log info may be missing for users that use older versions of Ryujinx, so reading the settings is not always possible.
+                # As ['user_setting'] is initialized with "Unknown" values, False should not be an issue for setting.get()
+                try:
+                    switch_mode = [
+                        line.split()[-1]
+                        for line in log_file.splitlines()
+                        if "IsDocked" in line
+                    ][-1]
+                    if switch_mode and setting.get("docked"):
+                        setting[
+                            "docked"
+                        ] = f"{'Docked' if switch_mode == 'True' else 'Handheld'}"
 
-                audio_setting = [
-                    line.split()[-1]
-                    for line in log_file.splitlines()
-                    if "AudioBackend" in line
-                ][-1]
-                if audio_setting:
-                    self.embed["user_settings"]["audio_backend"] = audio_setting
+                    pptc_setting = re.search(
+                        r"Ptc Initialize:.+\(enabled:\s(.+?)\)[^;\r]",
+                        log_file,
+                        re.MULTILINE,
+                    ).group(1)
+                    if pptc_setting and setting.get("pptc"):
+                        setting[
+                            "pptc"
+                        ] = f"{'Enabled' if pptc_setting == 'True' else 'Disabled'}"
 
-                switch_mode = [
-                    line.split()[-1]
-                    for line in log_file.splitlines()
-                    if "IsDocked" in line
-                ][-1]
-                if switch_mode:
-                    self.embed["user_settings"][
-                        "docked"
-                    ] = f"{'Docked' if switch_mode == 'True' else 'Handheld'}"
+                    audio_setting = [
+                        line.split()[-1]
+                        for line in log_file.splitlines()
+                        if "AudioBackend" in line
+                    ][-1]
+                    if audio_setting and setting.get("audio_backend"):
+                        setting["audio_backend"] = audio_setting
 
-                # Take note of the difference between 'Vsync' and 'VSyncStatus' capitalization in both initial and toggle settings
-                vsync_setting = [
-                    line.split()[-1]
-                    for line in log_file.splitlines()
-                    if "Vsync" in line or "VSyncStatus_Clicked" in line
-                ][-1]
-                if vsync_setting:
-                    self.embed["user_settings"][
-                        "vsync"
-                    ] = f"{'Enabled' if vsync_setting == 'True' else 'Disabled'}"
-            except (AttributeError, IndexError):
-                pass
+                    # Take note of the difference between 'Vsync' and 'VSyncStatus' capitalization in both initial and toggle settings
+                    vsync_setting = [
+                        line.split()[-1]
+                        for line in log_file.splitlines()
+                        if "Vsync" in line or "VSyncStatus_Clicked" in line
+                    ][-1]
+                    if vsync_setting and setting.get("vsync"):
+                        setting[
+                            "vsync"
+                        ] = f"{'Enabled' if vsync_setting == 'True' else 'Disabled'}"
+                except (AttributeError, IndexError) as error:
+                    print(f"User settings exception: {logging.warn(error)}")
+                    continue
 
             def find_error_message(log_file):
                 try:
@@ -318,6 +324,10 @@ class LogFileReader(Cog):
             else:
                 log_string = "✅ Default logs enabled"
             self.embed["game_info"]["notes"].append(log_string)
+
+            if self.embed["emu_info"]["ryu_firmware"] == "Unknown":
+                firmware_warning = f"**❌ Nintendo Switch firmware not found**"
+                self.embed["game_info"]["notes"].append(firmware_warning)
 
             def severity(log_note_string):
                 symbols = ["❌", "⚠️", "ℹ", "✅"]
