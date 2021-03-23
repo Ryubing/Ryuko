@@ -232,7 +232,7 @@ class LogFileReader(Cog):
                     print(f"User settings exception: {logging.warn(error)}")
                     continue
 
-            def find_error_message(log_file):
+            def analyse_error_message(log_file):
                 try:
                     errors = []
                     curr_error_lines = []
@@ -244,19 +244,31 @@ class LogFileReader(Cog):
                             errors.append(curr_error_lines)
                         elif line[0] == " " or line == "":
                             curr_error_lines.append(line)
+                    shader_cache_collision = bool(
+                        [
+                            line
+                            for line in errors
+                            if any("Cache collision found" in string for string in line)
+                        ]
+                    )
                     last_errors = "\n".join(
                         errors[-1][:2] if "|E|" in errors[-1][0] else ""
                     )
                 except IndexError:
                     last_errors = None
-                return last_errors
+                return (last_errors, shader_cache_collision)
 
             # Finds the lastest error denoted by |E| in the log and its first line
-            error_message = find_error_message(log_file)
-            if error_message:
-                self.embed["game_info"]["errors"] = f"```{error_message}```"
+            # Also warns of shader cache collisions
+            last_error_snippet, shader_cache_warn = analyse_error_message(log_file)
+            if last_error_snippet:
+                self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
             else:
                 pass
+
+            if shader_cache_warn:
+                shader_cache_warn = f"⚠️ Cache collision detected. Investigate possible shader cache issues"
+                self.embed["game_info"]["notes"].append(shader_cache_warn)
 
             def mods_information(log_file):
                 mods_regex = re.compile(r"Found mod\s\'(.+?)\'\s(\[.+?\])")
