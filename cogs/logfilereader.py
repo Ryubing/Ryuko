@@ -168,189 +168,211 @@ class LogFileReader(Cog):
             log_embed.add_field(
                 name="Mods", value=self.embed["game_info"]["mods"], inline=False
             )
+
+            try:
+                notes_value = "\n".join(game_notes)
+            except TypeError:
+                notes_value = "Nothing to note"
             log_embed.add_field(
                 name="Notes",
-                value="\n".join(game_notes),
+                value=notes_value,
                 inline=False,
             )
 
             return log_embed
 
         def analyse_log(log_file):
-            self.embed["game_info"]["game_name"] = (
-                re.search(
-                    r"Loader LoadNca: Application Loaded:\s([^;\r]*)",
-                    log_file,
-                    re.MULTILINE,
-                )
-                .group(1)
-                .rstrip()
-            )
-            for setting in self.embed["user_settings"]:
-                # Some log info may be missing for users that use older versions of Ryujinx, so reading the settings is not always possible.
-                # As ['user_setting'] is initialized with "Unknown" values, False should not be an issue for setting.get()
-                try:
-                    switch_mode = [
-                        line.split()[-1]
-                        for line in log_file.splitlines()
-                        if "IsDocked" in line
-                    ][-1]
-                    if switch_mode and setting.get("docked"):
-                        setting[
-                            "docked"
-                        ] = f"{'Docked' if switch_mode == 'True' else 'Handheld'}"
-
-                    pptc_setting = re.search(
-                        r"Ptc Initialize:.+\(enabled:\s(.+?)\)[^;\r]",
+            try:
+                self.embed["game_info"]["game_name"] = (
+                    re.search(
+                        r"Loader LoadNca: Application Loaded:\s([^;\r]*)",
                         log_file,
                         re.MULTILINE,
-                    ).group(1)
-                    if pptc_setting and setting.get("pptc"):
-                        setting[
-                            "pptc"
-                        ] = f"{'Enabled' if pptc_setting == 'True' else 'Disabled'}"
-
-                    audio_setting = [
-                        line.split()[-1]
-                        for line in log_file.splitlines()
-                        if "AudioBackend" in line
-                    ][-1]
-                    if audio_setting and setting.get("audio_backend"):
-                        setting["audio_backend"] = audio_setting
-
-                    # Take note of the difference between 'Vsync' and 'VSyncStatus' capitalization in both initial and toggle settings
-                    vsync_setting = [
-                        line.split()[-1]
-                        for line in log_file.splitlines()
-                        if "Vsync" in line or "VSyncStatus_Clicked" in line
-                    ][-1]
-                    if vsync_setting and setting.get("vsync"):
-                        setting[
-                            "vsync"
-                        ] = f"{'Enabled' if vsync_setting == 'True' else 'Disabled'}"
-                except (AttributeError, IndexError) as error:
-                    print(f"User settings exception: {logging.warn(error)}")
-                    continue
-
-            def analyse_error_message(log_file):
-                try:
-                    errors = []
-                    curr_error_lines = []
-                    for line in log_file.splitlines():
-                        if line == "":
-                            continue
-                        if "|E|" in line:
-                            curr_error_lines = [line]
-                            errors.append(curr_error_lines)
-                        elif line[0] == " " or line == "":
-                            curr_error_lines.append(line)
-                    shader_cache_collision = bool(
-                        [
-                            line
-                            for line in errors
-                            if any("Cache collision found" in string for string in line)
-                        ]
                     )
-                    last_errors = "\n".join(
-                        errors[-1][:2] if "|E|" in errors[-1][0] else ""
-                    )
-                except IndexError:
-                    last_errors = None
-                return (last_errors, shader_cache_collision)
-
-            # Finds the lastest error denoted by |E| in the log and its first line
-            # Also warns of shader cache collisions
-            last_error_snippet, shader_cache_warn = analyse_error_message(log_file)
-            if last_error_snippet:
-                self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
-            else:
-                pass
-
-            if shader_cache_warn:
-                shader_cache_warn = f"⚠️ Cache collision detected. Investigate possible shader cache issues"
-                self.embed["game_info"]["notes"].append(shader_cache_warn)
-
-            def mods_information(log_file):
-                mods_regex = re.compile(r"Found mod\s\'(.+?)\'\s(\[.+?\])")
-                matches = re.findall(mods_regex, log_file)
-                if matches:
-                    mods = [{"mod": match[0], "status": match[1]} for match in matches]
-                    mods_status = [
-                        f"ℹ️ {i['mod']} ({'ExeFS' if i['status'] == '[E]' else 'RomFS'})"
-                        for i in mods
-                    ]
-                    return mods_status
-
-            # Find information on installed mods
-            game_mods = mods_information(log_file)
-            if game_mods:
-                self.embed["game_info"]["mods"] = "\n".join(game_mods)
-            else:
-                pass
-
-            controllers_regex = re.compile(r"Hid Configure: ([^\r\n]+)")
-            controllers = re.findall(controllers_regex, log_file)
-            if controllers:
-                input_status = [f"ℹ {match}" for match in controllers]
-                # Hid Configure lines can appear multiple times, so converting to dict keys removes duplicate entries,
-                # also maintains the list order
-                input_status = list(dict.fromkeys(input_status))
-                input_string = "\n".join(input_status)
-            else:
-                input_string = "⚠️ No controller information found"
-            self.embed["game_info"]["notes"].append(input_string)
-
-            try:
-                ram_avaliable_regex = re.compile(r"Available\s(\d+)(?=\sMB)")
-                ram_avaliable = re.search(ram_avaliable_regex, log_file)[1]
-                if int(ram_avaliable) < 8000:
-                    ram_warning = "⚠️ Less than 8GB RAM avaliable"
-                    self.embed["game_info"]["notes"].append(ram_warning)
-            except TypeError:
-                pass
-
-            if "Darwin" in self.embed["hardware_info"]["os"]:
-                mac_os_warning = "**❌ macOS is currently unsupported**"
-                self.embed["game_info"]["notes"].append(mac_os_warning)
-
-            if "Intel" in self.embed["hardware_info"]["gpu"]:
-                if (
-                    "Darwin" in self.embed["hardware_info"]["os"]
-                    or "Windows" in self.embed["hardware_info"]["os"]
-                ):
-                    intel_gpu_warning = "**⚠️ Intel iGPUs are known to have driver issues, consider using a discrete GPU**"
-                    self.embed["game_info"]["notes"].append(intel_gpu_warning)
-
-            # Find information on logs, whether defaults are enabled or not
-            default_logs = ["Info", "Warning", "Error", "Guest", "Stub"]
-            user_logs = (
-                self.embed["emu_info"]["logs_enabled"]
-                .rstrip()
-                .replace(" ", "")
-                .split(",")
-            )
-            disabled_logs = set(default_logs).difference(set(user_logs))
-            if disabled_logs:
-                logs_status = [f"⚠️ {log} log is not enabled" for log in disabled_logs]
-                log_string = "\n".join(logs_status)
-            else:
-                log_string = "✅ Default logs enabled"
-            self.embed["game_info"]["notes"].append(log_string)
-
-            if self.embed["emu_info"]["ryu_firmware"] == "Unknown":
-                firmware_warning = f"**❌ Nintendo Switch firmware not found**"
-                self.embed["game_info"]["notes"].append(firmware_warning)
-
-            def severity(log_note_string):
-                symbols = ["❌", "⚠️", "ℹ", "✅"]
-                return next(
-                    i for i, symbol in enumerate(symbols) if symbol in log_note_string
+                    .group(1)
+                    .rstrip()
                 )
+                for setting in self.embed["user_settings"]:
+                    # Some log info may be missing for users that use older versions of Ryujinx, so reading the settings is not always possible.
+                    # As ['user_setting'] is initialized with "Unknown" values, False should not be an issue for setting.get()
+                    try:
+                        switch_mode = [
+                            line.split()[-1]
+                            for line in log_file.splitlines()
+                            if "IsDocked" in line
+                        ][-1]
+                        if switch_mode and setting.get("docked"):
+                            setting[
+                                "docked"
+                            ] = f"{'Docked' if switch_mode == 'True' else 'Handheld'}"
 
-            game_notes = [note for note in self.embed["game_info"]["notes"]]
-            ordered_game_notes = sorted(game_notes, key=severity)
+                        pptc_setting = re.search(
+                            r"Ptc Initialize:.+\(enabled:\s(.+?)\)[^;\r]",
+                            log_file,
+                            re.MULTILINE,
+                        ).group(1)
+                        if pptc_setting and setting.get("pptc"):
+                            setting[
+                                "pptc"
+                            ] = f"{'Enabled' if pptc_setting == 'True' else 'Disabled'}"
 
-            return ordered_game_notes
+                        audio_setting = [
+                            line.split()[-1]
+                            for line in log_file.splitlines()
+                            if "AudioBackend" in line
+                        ][-1]
+                        if audio_setting and setting.get("audio_backend"):
+                            setting["audio_backend"] = audio_setting
+
+                        # Take note of the difference between 'Vsync' and 'VSyncStatus' capitalization in both initial and toggle settings
+                        vsync_setting = [
+                            line.split()[-1]
+                            for line in log_file.splitlines()
+                            if "Vsync" in line or "VSyncStatus_Clicked" in line
+                        ][-1]
+                        if vsync_setting and setting.get("vsync"):
+                            setting[
+                                "vsync"
+                            ] = f"{'Enabled' if vsync_setting == 'True' else 'Disabled'}"
+                    except (AttributeError, IndexError) as error:
+                        print(f"User settings exception: {logging.warn(error)}")
+                        continue
+
+                def analyse_error_message(log_file):
+                    try:
+                        errors = []
+                        curr_error_lines = []
+                        for line in log_file.splitlines():
+                            if line == "":
+                                continue
+                            if "|E|" in line:
+                                curr_error_lines = [line]
+                                errors.append(curr_error_lines)
+                            elif line[0] == " " or line == "":
+                                curr_error_lines.append(line)
+                        shader_cache_collision = bool(
+                            [
+                                line
+                                for line in errors
+                                if any(
+                                    "Cache collision found" in string for string in line
+                                )
+                            ]
+                        )
+                        last_errors = "\n".join(
+                            errors[-1][:2] if "|E|" in errors[-1][0] else ""
+                        )
+                    except IndexError:
+                        last_errors = None
+                    return (last_errors, shader_cache_collision)
+
+                # Finds the lastest error denoted by |E| in the log and its first line
+                # Also warns of shader cache collisions
+                last_error_snippet, shader_cache_warn = analyse_error_message(log_file)
+                if last_error_snippet:
+                    self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
+                else:
+                    pass
+
+                if shader_cache_warn:
+                    shader_cache_warn = f"⚠️ Cache collision detected. Investigate possible shader cache issues"
+                    self.embed["game_info"]["notes"].append(shader_cache_warn)
+
+                timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
+                latest_timestamp = re.findall(timestamp_regex, log_file)[-1]
+                if latest_timestamp:
+                    timestamp_message = f"ℹ️ Time elapsed in log: `{latest_timestamp}`"
+                    self.embed["game_info"]["notes"].append(timestamp_message)
+
+                def mods_information(log_file):
+                    mods_regex = re.compile(r"Found mod\s\'(.+?)\'\s(\[.+?\])")
+                    matches = re.findall(mods_regex, log_file)
+                    if matches:
+                        mods = [
+                            {"mod": match[0], "status": match[1]} for match in matches
+                        ]
+                        mods_status = [
+                            f"ℹ️ {i['mod']} ({'ExeFS' if i['status'] == '[E]' else 'RomFS'})"
+                            for i in mods
+                        ]
+                        return mods_status
+
+                # Find information on installed mods
+                game_mods = mods_information(log_file)
+                if game_mods:
+                    self.embed["game_info"]["mods"] = "\n".join(game_mods)
+                else:
+                    pass
+
+                controllers_regex = re.compile(r"Hid Configure: ([^\r\n]+)")
+                controllers = re.findall(controllers_regex, log_file)
+                if controllers:
+                    input_status = [f"ℹ {match}" for match in controllers]
+                    # Hid Configure lines can appear multiple times, so converting to dict keys removes duplicate entries,
+                    # also maintains the list order
+                    input_status = list(dict.fromkeys(input_status))
+                    input_string = "\n".join(input_status)
+                else:
+                    input_string = "⚠️ No controller information found"
+                self.embed["game_info"]["notes"].append(input_string)
+
+                try:
+                    ram_avaliable_regex = re.compile(r"Available\s(\d+)(?=\sMB)")
+                    ram_avaliable = re.search(ram_avaliable_regex, log_file)[1]
+                    if int(ram_avaliable) < 8000:
+                        ram_warning = "⚠️ Less than 8GB RAM avaliable"
+                        self.embed["game_info"]["notes"].append(ram_warning)
+                except TypeError:
+                    pass
+
+                if "Darwin" in self.embed["hardware_info"]["os"]:
+                    mac_os_warning = "**❌ macOS is currently unsupported**"
+                    self.embed["game_info"]["notes"].append(mac_os_warning)
+
+                if "Intel" in self.embed["hardware_info"]["gpu"]:
+                    if (
+                        "Darwin" in self.embed["hardware_info"]["os"]
+                        or "Windows" in self.embed["hardware_info"]["os"]
+                    ):
+                        intel_gpu_warning = "**⚠️ Intel iGPUs are known to have driver issues, consider using a discrete GPU**"
+                        self.embed["game_info"]["notes"].append(intel_gpu_warning)
+
+                # Find information on logs, whether defaults are enabled or not
+                default_logs = ["Info", "Warning", "Error", "Guest", "Stub"]
+                user_logs = (
+                    self.embed["emu_info"]["logs_enabled"]
+                    .rstrip()
+                    .replace(" ", "")
+                    .split(",")
+                )
+                disabled_logs = set(default_logs).difference(set(user_logs))
+                if disabled_logs:
+                    logs_status = [
+                        f"⚠️ {log} log is not enabled" for log in disabled_logs
+                    ]
+                    log_string = "\n".join(logs_status)
+                else:
+                    log_string = "✅ Default logs enabled"
+                self.embed["game_info"]["notes"].append(log_string)
+
+                if self.embed["emu_info"]["ryu_firmware"] == "Unknown":
+                    firmware_warning = f"**❌ Nintendo Switch firmware not found**"
+                    self.embed["game_info"]["notes"].append(firmware_warning)
+
+                def severity(log_note_string):
+                    symbols = ["❌", "⚠️", "ℹ", "✅"]
+                    return next(
+                        i
+                        for i, symbol in enumerate(symbols)
+                        if symbol in log_note_string
+                    )
+
+                game_notes = [note for note in self.embed["game_info"]["notes"]]
+                ordered_game_notes = sorted(game_notes, key=severity)
+
+                return ordered_game_notes
+            except AttributeError:
+                pass
 
         get_hardware_info(log_file)
         get_ryujinx_info(log_file)
