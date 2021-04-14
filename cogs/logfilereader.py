@@ -1,5 +1,4 @@
 import logging
-from typing import Type
 import discord
 from discord.ext.commands import Cog
 import re
@@ -47,9 +46,12 @@ class LogFileReader(Cog):
             },
             "user_settings": [
                 {
-                    "pptc": "Unknown",
                     "audio_backend": "Unknown",
                     "docked": "Unknown",
+                    "missing_services": "Unknown",
+                    "pptc": "Unknown",
+                    "resolution": "Unknown",
+                    "shader_cache": "Unknown",
                     "vsync": "Unknown",
                 }
             ],
@@ -195,45 +197,51 @@ class LogFileReader(Cog):
                 for setting in self.embed["user_settings"]:
                     # Some log info may be missing for users that use older versions of Ryujinx, so reading the settings is not always possible.
                     # As ['user_setting'] is initialized with "Unknown" values, False should not be an issue for setting.get()
+                    def get_user_settings(log_file, setting_name, setting_string):
+                        user_setting = [
+                            line.split()[-1]
+                            for line in log_file.splitlines()
+                            if f"LogValueChange: {setting_string}" in line
+                        ][-1]
+                        if user_setting and setting.get(setting_name):
+                            setting[setting_name] = user_setting
+                            if setting_name == "docked":
+                                setting[
+                                    setting_name
+                                ] = f"{'Docked' if user_setting == 'True' else 'Handheld'}"
+                            if setting_name in [
+                                "missing_services",
+                                "pptc",
+                                "shader_cache",
+                                "vsync",
+                            ]:
+                                setting[
+                                    setting_name
+                                ] = f"{'Enabled' if user_setting == 'True' else 'Disabled'}"
+                        return setting[setting_name]
+
                     try:
-                        switch_mode = [
-                            line.split()[-1]
-                            for line in log_file.splitlines()
-                            if "IsDocked" in line
-                        ][-1]
-                        if switch_mode and setting.get("docked"):
-                            setting[
-                                "docked"
-                            ] = f"{'Docked' if switch_mode == 'True' else 'Handheld'}"
-
-                        pptc_setting = re.search(
-                            r"Ptc Initialize:.+\(enabled:\s(.+?)\)[^;\r]",
-                            log_file,
-                            re.MULTILINE,
-                        ).group(1)
-                        if pptc_setting and setting.get("pptc"):
-                            setting[
-                                "pptc"
-                            ] = f"{'Enabled' if pptc_setting == 'True' else 'Disabled'}"
-
-                        audio_setting = [
-                            line.split()[-1]
-                            for line in log_file.splitlines()
-                            if "AudioBackend" in line
-                        ][-1]
-                        if audio_setting and setting.get("audio_backend"):
-                            setting["audio_backend"] = audio_setting
-
-                        # Take note of the difference between 'Vsync' and 'VSyncStatus' capitalization in both initial and toggle settings
-                        vsync_setting = [
-                            line.split()[-1]
-                            for line in log_file.splitlines()
-                            if "Vsync" in line or "VSyncStatus_Clicked" in line
-                        ][-1]
-                        if vsync_setting and setting.get("vsync"):
-                            setting[
-                                "vsync"
-                            ] = f"{'Enabled' if vsync_setting == 'True' else 'Disabled'}"
+                        setting["audio_backend"] = get_user_settings(
+                            log_file, "audio_backend", "AudioBackend"
+                        )
+                        setting["docked"] = get_user_settings(
+                            log_file, "docked", "EnableDockedMode"
+                        )
+                        setting["missing_services"] = get_user_settings(
+                            log_file, "missing_services", "IgnoreMissingServices"
+                        )
+                        setting["pptc"] = get_user_settings(
+                            log_file, "pptc", "EnablePtc"
+                        )
+                        setting["resolution"] = get_user_settings(
+                            log_file, "resolution", "ResScale"
+                        )
+                        setting["shader_cache"] = get_user_settings(
+                            log_file, "shader_cache", "EnableShaderCache"
+                        )
+                        setting["vsync"] = get_user_settings(
+                            log_file, "vsync", "EnableVsync"
+                        )
                     except (AttributeError, IndexError) as error:
                         print(f"User settings exception: {logging.warn(error)}")
                         continue
