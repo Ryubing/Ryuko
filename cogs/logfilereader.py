@@ -1,9 +1,11 @@
 import logging
-import discord
-from discord.ext.commands import Cog
 import re
+from itertools import chain
+
 import aiohttp
 import config
+import discord
+from discord.ext.commands import Cog
 
 logging.basicConfig(
     format="%(asctime)s (%(levelname)s) %(message)s (Line %(lineno)d)",
@@ -44,17 +46,17 @@ class LogFileReader(Cog):
                 "mods": "No mods found",
                 "notes": [],
             },
-            "user_settings": [
-                {
-                    "audio_backend": "Unknown",
-                    "docked": "Unknown",
-                    "missing_services": "Unknown",
-                    "pptc": "Unknown",
-                    "resolution": "Unknown",
-                    "shader_cache": "Unknown",
-                    "vsync": "Unknown",
-                }
-            ],
+            "settings": {
+                "audio_backend": "Unknown",
+                "docked": "Unknown",
+                "ignore_missing_services": "Unknown",
+                "pptc": "Unknown",
+                "shader_cache": "Unknown",
+                "vsync": "Unknown",
+                "resolution_scale": "Unknown",
+                "anisotropic_filtering": "Unknown",
+                "aspect_ratio": "Unknown",
+            },
         }
         attached_log = message.attachments[0]
         author_name = f"@{message.author.name}"
@@ -117,7 +119,7 @@ class LogFileReader(Cog):
             )
             self.embed["game_info"]["game_name"] = cleaned_game_name
 
-            hardware_info = "\n".join(
+            hardware_info = " | ".join(
                 (
                     f"**CPU:** {self.embed['hardware_info']['cpu']}",
                     f"**GPU:** {self.embed['hardware_info']['gpu']}",
@@ -126,16 +128,24 @@ class LogFileReader(Cog):
                 )
             )
 
-            user_settings_info = "\n".join(
+            system_settings_info = "\n".join(
                 (
-                    f"**Audio Backend:** `{self.embed['user_settings'][0]['audio_backend']}`",
-                    f"**Console Mode:** `{self.embed['user_settings'][0]['docked']}`",
-                    f"**PPTC:** `{self.embed['user_settings'][0]['pptc']}`",
-                    f"**V-Sync:** `{self.embed['user_settings'][0]['vsync']}`",
+                    f"**Audio Backend:** `{self.embed['settings']['audio_backend']}`",
+                    f"**Console Mode:** `{self.embed['settings']['docked']}`",
+                    f"**PPTC:** `{self.embed['settings']['pptc']}`",
+                    f"**V-Sync:** `{self.embed['settings']['vsync']}`",
                 )
             )
 
-            ryujinx_info = "\n".join(
+            graphics_settings_info = "\n".join(
+                (
+                    f"**Resolution:** `{self.embed['settings']['resolution_scale']}`",
+                    f"**Anisotropic Filtering:** `{self.embed['settings']['anisotropic_filtering']}`",
+                    f"**Aspect Ratio:** `{self.embed['settings']['aspect_ratio']}`",
+                )
+            )
+
+            ryujinx_info = " | ".join(
                 (
                     f"**Version:** {self.embed['emu_info']['ryu_version']}",
                     f"**Firmware:** {self.embed['emu_info']['ryu_firmware']}",
@@ -146,8 +156,11 @@ class LogFileReader(Cog):
                 title=f"{cleaned_game_name}", colour=discord.Colour(0x4A90E2)
             )
             log_embed.set_footer(text=f"Log uploaded by {author_name}")
-            log_embed.add_field(name="Hardware Info", value=hardware_info)
-            log_embed.add_field(name="Ryujinx Info", value=ryujinx_info)
+            log_embed.add_field(
+                name="General Info",
+                value=" | ".join((ryujinx_info, hardware_info)),
+                inline=False,
+            )
             if cleaned_game_name == "Unknown":
                 log_embed.add_field(
                     name="Empty Log",
@@ -158,9 +171,14 @@ class LogFileReader(Cog):
                     inline=False,
                 )
             log_embed.add_field(
-                name="Settings",
-                value=user_settings_info,
-                inline=False,
+                name="System Settings",
+                value=system_settings_info,
+                inline=True,
+            )
+            log_embed.add_field(
+                name="Graphics Settings",
+                value=graphics_settings_info,
+                inline=True,
             )
             log_embed.add_field(
                 name="Latest Error Snippet",
@@ -194,56 +212,80 @@ class LogFileReader(Cog):
                     .group(1)
                     .rstrip()
                 )
-                for setting in self.embed["user_settings"]:
+                for setting_name in self.embed["settings"]:
                     # Some log info may be missing for users that use older versions of Ryujinx, so reading the settings is not always possible.
-                    # As ['user_setting'] is initialized with "Unknown" values, False should not be an issue for setting.get()
-                    def get_user_settings(log_file, setting_name, setting_string):
-                        user_setting = [
+                    # As settings are initialized with "Unknown" values, False should not be an issue for setting.get()
+                    def get_setting(log_file, name, setting_string):
+                        setting = self.embed["settings"]
+                        setting_value = [
                             line.split()[-1]
                             for line in log_file.splitlines()
                             if f"LogValueChange: {setting_string}" in line
                         ][-1]
-                        if user_setting and setting.get(setting_name):
-                            setting[setting_name] = user_setting
-                            if setting_name == "docked":
+                        if setting_value and setting.get(name):
+                            setting[name] = setting_value
+                            if name == "docked":
                                 setting[
-                                    setting_name
-                                ] = f"{'Docked' if user_setting == 'True' else 'Handheld'}"
-                            if setting_name in [
-                                "missing_services",
+                                    name
+                                ] = f"{'Docked' if setting_value == 'True' else 'Handheld'}"
+                            if name == "resolution_scale":
+                                resolution_map = {
+                                    "-1": "Custom",
+                                    "1": "Native (720p/1080p)",
+                                    "2": "2x (1440p/2160p)",
+                                    "3": "3x (2160p/31240p)",
+                                    "4": "4x (2880p/4320p)",
+                                }
+                                setting[name] = resolution_map[setting_value]
+                            if name == "anisotropic_filtering":
+                                anisotropic_map = {
+                                    "-1": "Auto",
+                                    "2": "2x",
+                                    "4": "4x",
+                                    "8": "8x",
+                                    "16": "16x",
+                                }
+                                setting[name] = anisotropic_map[setting_value]
+                            if name == "aspect_ratio":
+                                aspect_map = {
+                                    "Fixed4x3": "4:3",
+                                    "Fixed16x9": "16:9",
+                                    "Fixed16x10": "16:10",
+                                    "Fixed21x9": "21:9",
+                                    "Fixed32x9": "32:9",
+                                    "Stretched": "Stretch to Fit Window",
+                                }
+                                setting[name] = aspect_map[setting_value]
+                            if name in [
+                                "ignore_missing_services",
                                 "pptc",
                                 "shader_cache",
                                 "vsync",
                             ]:
                                 setting[
-                                    setting_name
-                                ] = f"{'Enabled' if user_setting == 'True' else 'Disabled'}"
-                        return setting[setting_name]
+                                    name
+                                ] = f"{'Enabled' if setting_value == 'True' else 'Disabled'}"
+                        return setting[name]
 
+                    setting_map = {
+                        "anisotropic_filtering": "MaxAnisotropy",
+                        "aspect_ratio": "AspectRatio",
+                        "audio_backend": "AudioBackend",
+                        "docked": "EnableDockedMode",
+                        "ignore_missing_services": "IgnoreMissingServices",
+                        "pptc": "EnablePtc",
+                        "resolution_scale": "ResScale",
+                        "shader_cache": "EnableShaderCache",
+                        "vsync": "EnableVsync",
+                    }
                     try:
-                        setting["audio_backend"] = get_user_settings(
-                            log_file, "audio_backend", "AudioBackend"
-                        )
-                        setting["docked"] = get_user_settings(
-                            log_file, "docked", "EnableDockedMode"
-                        )
-                        setting["missing_services"] = get_user_settings(
-                            log_file, "missing_services", "IgnoreMissingServices"
-                        )
-                        setting["pptc"] = get_user_settings(
-                            log_file, "pptc", "EnablePtc"
-                        )
-                        setting["resolution"] = get_user_settings(
-                            log_file, "resolution", "ResScale"
-                        )
-                        setting["shader_cache"] = get_user_settings(
-                            log_file, "shader_cache", "EnableShaderCache"
-                        )
-                        setting["vsync"] = get_user_settings(
-                            log_file, "vsync", "EnableVsync"
+                        self.embed[setting_name] = get_setting(
+                            log_file, setting_name, setting_map[setting_name]
                         )
                     except (AttributeError, IndexError) as error:
-                        print(f"User settings exception: {logging.warn(error)}")
+                        print(
+                            f"Settings exception: {setting_name}: {type(error).__name__}"
+                        )
                         continue
 
                 def analyse_error_message(log_file):
@@ -393,8 +435,6 @@ class LogFileReader(Cog):
         await self.bot.wait_until_ready()
         if message.author.bot:
             return
-
-        # If message has an attachment
         try:
             author_mention = message.author.mention
             filename = message.attachments[0].filename
