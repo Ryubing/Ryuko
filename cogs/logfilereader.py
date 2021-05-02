@@ -66,7 +66,7 @@ class LogFileReader(Cog):
         log_file_header_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}.*", re.DOTALL)
         log_file = re.search(log_file_header_regex, log_file).group(0)
 
-        def get_hardware_info(log_file):
+        def get_hardware_info(log_file=log_file):
             try:
                 self.embed["hardware_info"]["cpu"] = (
                     re.search(r"CPU:\s([^;\r]*)", log_file, re.MULTILINE)
@@ -93,7 +93,7 @@ class LogFileReader(Cog):
             except AttributeError:
                 pass
 
-        def get_ryujinx_info(log_file):
+        def get_ryujinx_info(log_file=log_file):
             try:
                 self.embed["emu_info"]["ryu_version"] = [
                     line.split()[-1]
@@ -201,7 +201,7 @@ class LogFileReader(Cog):
 
             return log_embed
 
-        def analyse_log(log_file):
+        def analyse_log(log_file=log_file):
             try:
                 self.embed["game_info"]["game_name"] = (
                     re.search(
@@ -215,7 +215,7 @@ class LogFileReader(Cog):
                 for setting_name in self.embed["settings"]:
                     # Some log info may be missing for users that use older versions of Ryujinx, so reading the settings is not always possible.
                     # As settings are initialized with "Unknown" values, False should not be an issue for setting.get()
-                    def get_setting(log_file, name, setting_string):
+                    def get_setting(name, setting_string, log_file=log_file):
                         setting = self.embed["settings"]
                         setting_value = [
                             line.split()[-1]
@@ -280,7 +280,7 @@ class LogFileReader(Cog):
                     }
                     try:
                         self.embed[setting_name] = get_setting(
-                            log_file, setting_name, setting_map[setting_name]
+                            setting_name, setting_map[setting_name], log_file=log_file
                         )
                     except (AttributeError, IndexError) as error:
                         print(
@@ -288,7 +288,7 @@ class LogFileReader(Cog):
                         )
                         continue
 
-                def analyse_error_message(log_file):
+                def analyse_error_message(log_file=log_file):
                     try:
                         errors = []
                         curr_error_lines = []
@@ -318,7 +318,7 @@ class LogFileReader(Cog):
 
                 # Finds the lastest error denoted by |E| in the log and its first line
                 # Also warns of shader cache collisions
-                last_error_snippet, shader_cache_warn = analyse_error_message(log_file)
+                last_error_snippet, shader_cache_warn = analyse_error_message()
                 if last_error_snippet:
                     self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
                 else:
@@ -334,7 +334,7 @@ class LogFileReader(Cog):
                     timestamp_message = f"ℹ️ Time elapsed in log: `{latest_timestamp}`"
                     self.embed["game_info"]["notes"].append(timestamp_message)
 
-                def mods_information(log_file):
+                def mods_information(log_file=log_file):
                     mods_regex = re.compile(r"Found mod\s\'(.+?)\'\s(\[.+?\])")
                     matches = re.findall(mods_regex, log_file)
                     if matches:
@@ -348,7 +348,7 @@ class LogFileReader(Cog):
                         return mods_status
 
                 # Find information on installed mods
-                game_mods = mods_information(log_file)
+                game_mods = mods_information()
                 if game_mods:
                     self.embed["game_info"]["mods"] = "\n".join(game_mods)
                 else:
@@ -424,9 +424,9 @@ class LogFileReader(Cog):
             except AttributeError:
                 pass
 
-        get_hardware_info(log_file)
-        get_ryujinx_info(log_file)
-        game_notes = analyse_log(log_file)
+        get_hardware_info()
+        get_ryujinx_info()
+        game_notes = analyse_log()
 
         return format_log_embed()
 
