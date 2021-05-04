@@ -367,10 +367,12 @@ class LogFileReader(Cog):
                 self.embed["game_info"]["notes"].append(input_string)
 
                 try:
-                    ram_avaliable_regex = re.compile(r"Available\s(\d+)(?=\sMB)")
-                    ram_avaliable = re.search(ram_avaliable_regex, log_file)[1]
-                    if int(ram_avaliable) < 8000:
-                        ram_warning = "⚠️ Less than 8GB RAM avaliable"
+                    ram_available_regex = re.compile(r"Available\s(\d+)(?=\sMB)")
+                    ram_available = re.search(ram_available_regex, log_file)[1]
+                    if int(ram_available) < 8000:
+                        ram_warning = (
+                            f"⚠️ Less than 8GB RAM available ({str(ram_available)} MB)"
+                        )
                         self.embed["game_info"]["notes"].append(ram_warning)
                 except TypeError:
                     pass
@@ -418,7 +420,11 @@ class LogFileReader(Cog):
                     )
 
                 game_notes = [note for note in self.embed["game_info"]["notes"]]
-                ordered_game_notes = sorted(game_notes, key=severity)
+                # Warnings split on the string after the warning symbol for alphabetical ordering
+                # Severity key then orders alphabetically sorted warnings to show most severe first
+                ordered_game_notes = sorted(
+                    sorted(game_notes, key=lambda x: x.split()[1]), key=severity
+                )
 
                 return ordered_game_notes
             except AttributeError:
