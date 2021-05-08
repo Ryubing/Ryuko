@@ -9,7 +9,7 @@ from discord.ext.commands import Cog
 
 logging.basicConfig(
     format="%(asctime)s (%(levelname)s) %(message)s (Line %(lineno)d)",
-    level=logging.DEBUG,
+    level=logging.INFO,
 )
 
 
