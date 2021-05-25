@@ -1,6 +1,5 @@
 import logging
 import re
-from itertools import chain
 
 import aiohttp
 import config
@@ -300,25 +299,33 @@ class LogFileReader(Cog):
                                 errors.append(curr_error_lines)
                             elif line[0] == " " or line == "":
                                 curr_error_lines.append(line)
-                        shader_cache_collision = bool(
-                            [
-                                line
-                                for line in errors
-                                if any(
-                                    "Cache collision found" in string for string in line
-                                )
-                            ]
-                        )
+
+                        def error_search(search_term):
+                            found_term = bool(
+                                [
+                                    line
+                                    for line in errors
+                                    if any(search_term in string for string in line)
+                                ]
+                            )
+                            return found_term
+
+                        shader_cache_collision = error_search("Cache collision found")
+                        dump_hash_warning = error_search("ResultFsInvalidIvfcHash")
                         last_errors = "\n".join(
                             errors[-1][:2] if "|E|" in errors[-1][0] else ""
                         )
                     except IndexError:
                         last_errors = None
-                    return (last_errors, shader_cache_collision)
+                    return (last_errors, shader_cache_collision, dump_hash_warning)
 
                 # Finds the lastest error denoted by |E| in the log and its first line
                 # Also warns of shader cache collisions
-                last_error_snippet, shader_cache_warn = analyse_error_message()
+                (
+                    last_error_snippet,
+                    shader_cache_warn,
+                    dump_hash_warning,
+                ) = analyse_error_message()
                 if last_error_snippet:
                     self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
                 else:
@@ -327,6 +334,10 @@ class LogFileReader(Cog):
                 if shader_cache_warn:
                     shader_cache_warn = f"⚠️ Cache collision detected. Investigate possible shader cache issues"
                     self.embed["game_info"]["notes"].append(shader_cache_warn)
+
+                if dump_hash_warning:
+                    dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad ROM dump issues"
+                    self.embed["game_info"]["notes"].append(dump_hash_warning)
 
                 timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
                 latest_timestamp = re.findall(timestamp_regex, log_file)[-1]
@@ -388,24 +399,26 @@ class LogFileReader(Cog):
                     ):
                         intel_gpu_warning = "**⚠️ Intel iGPUs are known to have driver issues, consider using a discrete GPU**"
                         self.embed["game_info"]["notes"].append(intel_gpu_warning)
-
-                # Find information on logs, whether defaults are enabled or not
-                default_logs = ["Info", "Warning", "Error", "Guest", "Stub"]
-                user_logs = (
-                    self.embed["emu_info"]["logs_enabled"]
-                    .rstrip()
-                    .replace(" ", "")
-                    .split(",")
-                )
-                disabled_logs = set(default_logs).difference(set(user_logs))
-                if disabled_logs:
-                    logs_status = [
-                        f"⚠️ {log} log is not enabled" for log in disabled_logs
-                    ]
-                    log_string = "\n".join(logs_status)
-                else:
-                    log_string = "✅ Default logs enabled"
-                self.embed["game_info"]["notes"].append(log_string)
+                try:
+                    # Find information on logs, whether defaults are enabled or not
+                    default_logs = ["Info", "Warning", "Error", "Guest", "Stub"]
+                    user_logs = (
+                        self.embed["emu_info"]["logs_enabled"]
+                        .rstrip()
+                        .replace(" ", "")
+                        .split(",")
+                    )
+                    disabled_logs = set(default_logs).difference(set(user_logs))
+                    if disabled_logs:
+                        logs_status = [
+                            f"⚠️ {log} log is not enabled" for log in disabled_logs
+                        ]
+                        log_string = "\n".join(logs_status)
+                    else:
+                        log_string = "✅ Default logs enabled"
+                    self.embed["game_info"]["notes"].append(log_string)
+                except AttributeError:
+                    pass
 
                 if self.embed["emu_info"]["ryu_firmware"] == "Unknown":
                     firmware_warning = f"**❌ Nintendo Switch firmware not found**"
@@ -425,7 +438,6 @@ class LogFileReader(Cog):
                 ordered_game_notes = sorted(
                     sorted(game_notes, key=lambda x: x.split()[1]), key=severity
                 )
-
                 return ordered_game_notes
             except AttributeError:
                 pass
