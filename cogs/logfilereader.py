@@ -424,6 +424,12 @@ class LogFileReader(Cog):
                     firmware_warning = f"**❌ Nintendo Switch firmware not found**"
                     self.embed["game_info"]["notes"].append(firmware_warning)
 
+                if "dirty" in self.embed["emu_info"]["ryu_version"]:
+                    custom_firmware_warning = (
+                        "**⚠️ Custom builds are not officially supported**"
+                    )
+                    self.embed["game_info"]["notes"].append(custom_firmware_warning)
+
                 def severity(log_note_string):
                     symbols = ["❌", "⚠️", "ℹ", "✅"]
                     return next(
