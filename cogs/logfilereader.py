@@ -424,11 +424,31 @@ class LogFileReader(Cog):
                     firmware_warning = f"**❌ Nintendo Switch firmware not found**"
                     self.embed["game_info"]["notes"].append(firmware_warning)
 
-                if "dirty" in self.embed["emu_info"]["ryu_version"]:
-                    custom_firmware_warning = (
-                        "**⚠️ Custom builds are not officially supported**"
-                    )
-                    self.embed["game_info"]["notes"].append(custom_firmware_warning)
+                mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
+                pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
+                ldn_version = re.compile(r"^\d\.\d\.\d\-ldn\d\.\d$")
+
+                if (
+                    message.channel.id == config.bot_log_allowed_channels["support"]
+                    or message.channel.id
+                    == config.bot_log_allowed_channels["patreon-support"]
+                ):
+                    if re.match(pr_version, self.embed["emu_info"]["ryu_version"]):
+                        pr_version_warning = f"**⚠️ PR build logs should be posted in <#{config.bot_log_allowed_channels['pr-testing']}>**"
+                        self.embed["game_info"]["notes"].append(pr_version_warning)
+
+                    if not (
+                        re.match(
+                            mainline_version, self.embed["emu_info"]["ryu_version"]
+                        )
+                        or re.match(ldn_version, self.embed["emu_info"]["ryu_version"])
+                        or re.match(pr_version, self.embed["emu_info"]["ryu_version"])
+                        or re.match("Unknown", self.embed["emu_info"]["ryu_version"])
+                    ):
+                        custom_firmware_warning = (
+                            "**⚠️ Custom builds are not officially supported**"
+                        )
+                        self.embed["game_info"]["notes"].append(custom_firmware_warning)
 
                 def severity(log_note_string):
                     symbols = ["❌", "⚠️", "ℹ", "✅"]
@@ -465,7 +485,10 @@ class LogFileReader(Cog):
             # Any message over 2000 chars is uploaded as message.txt, so this is accounted for
             log_file_regex = re.compile(r"^Ryujinx_.*\.log|message\.txt$")
             is_log_file = re.match(log_file_regex, filename)
-            if message.channel.id in self.bot_log_allowed_channels and is_log_file:
+            if (
+                message.channel.id in self.bot_log_allowed_channels.values()
+                and is_log_file
+            ):
                 if filename not in self.uploaded_log_filenames:
                     reply_message = await message.channel.send(
                         "Log detected, parsing..."
@@ -499,7 +522,15 @@ class LogFileReader(Cog):
                 )
             else:
                 return await message.channel.send(
-                    f"{author_mention} Please upload log files to {' or '.join([f'<#{id}>' for id in self.bot_log_allowed_channels])}"
+                    "\n".join(
+                        (
+                            f"{author_mention} Please upload log files to the correct location:\n",
+                            f'<#{config.bot_log_allowed_channels["support"]}>: General help and troubleshooting',
+                            f'<#{config.bot_log_allowed_channels["patreon-suport"]}>: Help and troubleshooting for Patreon subscribers',
+                            f'<#{config.bot_log_allowed_channels["development"]}>: Ryujinx development discussion',
+                            f'<#{config.bot_log_allowed_channels["pr-testing"]}>: Discussion of in-progress pull request builds',
+                        )
+                    )
                 )
         except IndexError:
             pass
