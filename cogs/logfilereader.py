@@ -68,23 +68,23 @@ class LogFileReader(Cog):
         def get_hardware_info(log_file=log_file):
             try:
                 self.embed["hardware_info"]["cpu"] = (
-                    re.search(r"CPU:\s([^;\r]*)", log_file, re.MULTILINE)
+                    re.search(r"CPU:\s([^;\n\r]*)", log_file, re.MULTILINE)
                     .group(1)
                     .rstrip()
                 )
                 self.embed["hardware_info"]["ram"] = (
-                    re.search(r"RAM:(\sTotal)?\s([^;\r]*)", log_file, re.MULTILINE)
+                    re.search(r"RAM:(\sTotal)?\s([^;\n\r]*)", log_file, re.MULTILINE)
                     .group(2)
                     .rstrip()
                 )
                 self.embed["hardware_info"]["os"] = (
-                    re.search(r"Operating System:\s([^;\r]*)", log_file, re.MULTILINE)
+                    re.search(r"Operating System:\s([^;\n\r]*)", log_file, re.MULTILINE)
                     .group(1)
                     .rstrip()
                 )
                 self.embed["hardware_info"]["gpu"] = (
                     re.search(
-                        r"PrintGpuInformation:\s([^;\r]*)", log_file, re.MULTILINE
+                        r"PrintGpuInformation:\s([^;\n\r]*)", log_file, re.MULTILINE
                     )
                     .group(1)
                     .rstrip()
@@ -100,7 +100,7 @@ class LogFileReader(Cog):
                     if "Ryujinx Version:" in line
                 ][0]
                 self.embed["emu_info"]["logs_enabled"] = (
-                    re.search(r"Logs Enabled:\s([^;\r]*)", log_file, re.MULTILINE)
+                    re.search(r"Logs Enabled:\s([^;\n\r]*)", log_file, re.MULTILINE)
                     .group(1)
                     .rstrip()
                 )
@@ -204,7 +204,7 @@ class LogFileReader(Cog):
             try:
                 self.embed["game_info"]["game_name"] = (
                     re.search(
-                        r"Loader LoadNca: Application Loaded:\s([^;\r]*)",
+                        r"Loader LoadNca: Application Loaded:\s([^;\n\r]*)",
                         log_file,
                         re.MULTILINE,
                     )
