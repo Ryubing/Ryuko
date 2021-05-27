@@ -483,11 +483,14 @@ class LogFileReader(Cog):
             author_mention = message.author.mention
             filename = message.attachments[0].filename
             # Any message over 2000 chars is uploaded as message.txt, so this is accounted for
-            log_file_regex = re.compile(r"^Ryujinx_.*\.log|message\.txt$")
-            is_log_file = re.match(log_file_regex, filename)
+            ryujinx_log_file_regex = re.compile(r"^Ryujinx_.*\.log|message\.txt$")
+            log_file = re.compile(r"^.*\.log|.*\.txt$")
+            is_ryujinx_log_file = re.match(ryujinx_log_file_regex, filename)
+            is_log_file = re.match(log_file, filename)
+
             if (
                 message.channel.id in self.bot_log_allowed_channels.values()
-                and is_log_file
+                and is_ryujinx_log_file
             ):
                 if filename not in self.uploaded_log_filenames:
                     reply_message = await message.channel.send(
@@ -516,11 +519,11 @@ class LogFileReader(Cog):
                     await message.channel.send(
                         f"The log file `{filename}` appears to be a duplicate {author_mention}. Please upload a more recent file."
                     )
-            elif not is_log_file:
+            elif is_log_file and not is_ryujinx_log_file and message.channel.id in self.bot_log_allowed_channels.values():
                 return await message.channel.send(
                     f"{author_mention} Your file does not match the Ryujinx log format. Please check your file."
                 )
-            else:
+            elif is_log_file and not message.channel.id in self.bot_log_allowed_channels.values():
                 return await message.channel.send(
                     "\n".join(
                         (
