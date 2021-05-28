@@ -173,10 +173,11 @@ class LogFileReader(Cog):
             if cleaned_game_name == "Unknown":
                 log_embed.add_field(
                     name="Empty Log",
-                    value="""This log file appears to be empty. To get a proper log, follow these steps:
-                                1) Start a game up.
-                                2) Play until your issue occurs.
-                                3) Upload your log file.""",
+                    value=f"""This log file appears to be empty. To get a proper log, follow these steps:
+                                1) Ensure the following default logs are enabled: Info, Warning, Error, Guest and Stub.
+                                2) Start a game up.
+                                3) Play until your issue occurs.
+                                4) Upload the latest log file.""",
                     inline=False,
                 )
             else:
@@ -434,6 +435,8 @@ class LogFileReader(Cog):
                     message.channel.id == config.bot_log_allowed_channels["support"]
                     or message.channel.id
                     == config.bot_log_allowed_channels["patreon-support"]
+                    or message.channel.id
+                    == config.bot_log_allowed_channels["linux-master-race"]
                 ):
                     if re.match(pr_version, self.embed["emu_info"]["ryu_version"]):
                         pr_version_warning = f"**⚠️ PR build logs should be posted in <#{config.bot_log_allowed_channels['pr-testing']}>**"
@@ -541,6 +544,7 @@ class LogFileReader(Cog):
                             f'<#{config.bot_log_allowed_channels["patreon-suport"]}>: Help and troubleshooting for Patreon subscribers',
                             f'<#{config.bot_log_allowed_channels["development"]}>: Ryujinx development discussion',
                             f'<#{config.bot_log_allowed_channels["pr-testing"]}>: Discussion of in-progress pull request builds',
+                            f'<#{config.bot_log_allowed_channels["linux-master-race"]}>: Linux support and discussion',
                         )
                     )
                 )
