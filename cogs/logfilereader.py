@@ -174,10 +174,11 @@ class LogFileReader(Cog):
                 log_embed.add_field(
                     name="Empty Log",
                     value=f"""This log file appears to be empty. To get a proper log, follow these steps:
-                                1) Ensure the following default logs are enabled: Info, Warning, Error, Guest and Stub.
-                                2) Start a game up.
-                                3) Play until your issue occurs.
-                                4) Upload the latest log file.""",
+                                1) In Logging settings, ensure `Enable Logging to File` is checked.
+                                2) Ensure the following default logs are enabled: `Info`, `Warning`, `Error`, `Guest` and `Stub`.
+                                3) Start a game up.
+                                4) Play until your issue occurs.
+                                5) Upload the latest log file.""",
                     inline=False,
                 )
             else:
@@ -212,7 +213,7 @@ class LogFileReader(Cog):
                         setting_value = [
                             line.split()[-1]
                             for line in log_file.splitlines()
-                            if f"LogValueChange: {setting_string}" in line
+                            if re.search(fr"LogValueChange: ({setting_string})\s", line)
                         ][-1]
                         if setting_value and setting.get(name):
                             setting[name] = setting_value
