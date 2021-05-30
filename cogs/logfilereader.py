@@ -537,10 +537,10 @@ class LogFileReader(Cog):
                 is_log_file
                 and not message.channel.id in self.bot_log_allowed_channels.values()
             ):
-                return await message.channel.send(
+                return await message.author.send(
                     "\n".join(
                         (
-                            f"{author_mention} Please upload log files to the correct location:\n",
+                            f"{author_mention} Please upload Ryujinx log files to the correct location:\n",
                             f'<#{config.bot_log_allowed_channels["support"]}>: General help and troubleshooting',
                             f'<#{config.bot_log_allowed_channels["patreon-suport"]}>: Help and troubleshooting for Patreon subscribers',
                             f'<#{config.bot_log_allowed_channels["development"]}>: Ryujinx development discussion',
