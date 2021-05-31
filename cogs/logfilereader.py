@@ -340,7 +340,7 @@ class LogFileReader(Cog):
                     self.embed["game_info"]["notes"].append(shader_cache_warn)
 
                 if dump_hash_warning:
-                    dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad ROM dump issues"
+                    dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad game/firmware dump issues"
                     self.embed["game_info"]["notes"].append(dump_hash_warning)
 
                 timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
@@ -542,7 +542,7 @@ class LogFileReader(Cog):
                         (
                             f"{author_mention} Please upload Ryujinx log files to the correct location:\n",
                             f'<#{config.bot_log_allowed_channels["support"]}>: General help and troubleshooting',
-                            f'<#{config.bot_log_allowed_channels["patreon-suport"]}>: Help and troubleshooting for Patreon subscribers',
+                            f'<#{config.bot_log_allowed_channels["patreon-support"]}>: Help and troubleshooting for Patreon subscribers',
                             f'<#{config.bot_log_allowed_channels["development"]}>: Ryujinx development discussion',
                             f'<#{config.bot_log_allowed_channels["pr-testing"]}>: Discussion of in-progress pull request builds',
                             f'<#{config.bot_log_allowed_channels["linux-master-race"]}>: Linux support and discussion',
