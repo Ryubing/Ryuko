@@ -146,14 +146,13 @@ suspect_words = [
     "underos",  # piracy-enabling cfw
     "tinfoil",  # title manager
     "dz",  # title manager
-    "goldleaf",  # potential title manager
     "lithium",  # title manager
-    "cracked",  # older term for pirated games
-    "xci",  # "backup" format
+    "cracked",  # older term for pirated game
     "xcz",  # "backup" format
     "nsz",  # "backup" format
     "hbg",  # piracy source
     "jits",  # piracy source
+    "emusak",  # piracy tool used with emulators
 ]
 
 # List of words that will be ignored if they match one of the
@@ -177,6 +176,7 @@ suspect_ignored_words = [
     "udptx",
     "ctx",
     "jit's",
+    "pcsx2",
 ]
 
 # == For cogs.links ==
