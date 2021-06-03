@@ -68,23 +68,23 @@ class LogFileReader(Cog):
         def get_hardware_info(log_file=log_file):
             try:
                 self.embed["hardware_info"]["cpu"] = (
-                    re.search(r"CPU:\s([^;\r]*)", log_file, re.MULTILINE)
+                    re.search(r"CPU:\s([^;\n\r]*)", log_file, re.MULTILINE)
                     .group(1)
                     .rstrip()
                 )
                 self.embed["hardware_info"]["ram"] = (
-                    re.search(r"RAM:(\sTotal)?\s([^;\r]*)", log_file, re.MULTILINE)
+                    re.search(r"RAM:(\sTotal)?\s([^;\n\r]*)", log_file, re.MULTILINE)
                     .group(2)
                     .rstrip()
                 )
                 self.embed["hardware_info"]["os"] = (
-                    re.search(r"Operating System:\s([^;\r]*)", log_file, re.MULTILINE)
+                    re.search(r"Operating System:\s([^;\n\r]*)", log_file, re.MULTILINE)
                     .group(1)
                     .rstrip()
                 )
                 self.embed["hardware_info"]["gpu"] = (
                     re.search(
-                        r"PrintGpuInformation:\s([^;\r]*)", log_file, re.MULTILINE
+                        r"PrintGpuInformation:\s([^;\n\r]*)", log_file, re.MULTILINE
                     )
                     .group(1)
                     .rstrip()
@@ -100,7 +100,7 @@ class LogFileReader(Cog):
                     if "Ryujinx Version:" in line
                 ][0]
                 self.embed["emu_info"]["logs_enabled"] = (
-                    re.search(r"Logs Enabled:\s([^;\r]*)", log_file, re.MULTILINE)
+                    re.search(r"Logs Enabled:\s([^;\n\r]*)", log_file, re.MULTILINE)
                     .group(1)
                     .rstrip()
                 )
@@ -160,15 +160,6 @@ class LogFileReader(Cog):
                 value=" | ".join((ryujinx_info, hardware_info)),
                 inline=False,
             )
-            if cleaned_game_name == "Unknown":
-                log_embed.add_field(
-                    name="Empty Log",
-                    value="""This log file appears to be empty. To get a proper log, follow these steps:
-                        \n 1) Start a game up.
-                        \n 2) Play until your issue occurs.
-                        \n 3) Upload your log file.""",
-                    inline=False,
-                )
             log_embed.add_field(
                 name="System Settings",
                 value=system_settings_info,
@@ -179,38 +170,41 @@ class LogFileReader(Cog):
                 value=graphics_settings_info,
                 inline=True,
             )
-            log_embed.add_field(
-                name="Latest Error Snippet",
-                value=self.embed["game_info"]["errors"],
-                inline=False,
-            )
-            log_embed.add_field(
-                name="Mods", value=self.embed["game_info"]["mods"], inline=False
-            )
+            if cleaned_game_name == "Unknown":
+                log_embed.add_field(
+                    name="Empty Log",
+                    value=f"""This log file appears to be empty. To get a proper log, follow these steps:
+                                1) In Logging settings, ensure `Enable Logging to File` is checked.
+                                2) Ensure the following default logs are enabled: `Info`, `Warning`, `Error`, `Guest` and `Stub`.
+                                3) Start a game up.
+                                4) Play until your issue occurs.
+                                5) Upload the latest log file.""",
+                    inline=False,
+                )
+            else:
+                log_embed.add_field(
+                    name="Latest Error Snippet",
+                    value=self.embed["game_info"]["errors"],
+                    inline=False,
+                )
+                log_embed.add_field(
+                    name="Mods", value=self.embed["game_info"]["mods"], inline=False
+                )
 
-            try:
-                notes_value = "\n".join(game_notes)
-            except TypeError:
-                notes_value = "Nothing to note"
-            log_embed.add_field(
-                name="Notes",
-                value=notes_value,
-                inline=False,
-            )
+                try:
+                    notes_value = "\n".join(game_notes)
+                except TypeError:
+                    notes_value = "Nothing to note"
+                log_embed.add_field(
+                    name="Notes",
+                    value=notes_value,
+                    inline=False,
+                )
 
             return log_embed
 
         def analyse_log(log_file=log_file):
             try:
-                self.embed["game_info"]["game_name"] = (
-                    re.search(
-                        r"Loader LoadNca: Application Loaded:\s([^;\r]*)",
-                        log_file,
-                        re.MULTILINE,
-                    )
-                    .group(1)
-                    .rstrip()
-                )
                 for setting_name in self.embed["settings"]:
                     # Some log info may be missing for users that use older versions of Ryujinx, so reading the settings is not always possible.
                     # As settings are initialized with "Unknown" values, False should not be an issue for setting.get()
@@ -219,7 +213,7 @@ class LogFileReader(Cog):
                         setting_value = [
                             line.split()[-1]
                             for line in log_file.splitlines()
-                            if f"LogValueChange: {setting_string}" in line
+                            if re.search(fr"LogValueChange: ({setting_string})\s", line)
                         ][-1]
                         if setting_value and setting.get(name):
                             setting[name] = setting_value
@@ -286,6 +280,16 @@ class LogFileReader(Cog):
                             f"Settings exception: {setting_name}: {type(error).__name__}"
                         )
                         continue
+                # Game name parsed last so that user settings are visible with empty log
+                self.embed["game_info"]["game_name"] = (
+                    re.search(
+                        r"Loader LoadNca: Application Loaded:\s([^;\n\r]*)",
+                        log_file,
+                        re.MULTILINE,
+                    )
+                    .group(1)
+                    .rstrip()
+                )
 
                 def analyse_error_message(log_file=log_file):
                     try:
@@ -336,7 +340,7 @@ class LogFileReader(Cog):
                     self.embed["game_info"]["notes"].append(shader_cache_warn)
 
                 if dump_hash_warning:
-                    dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad ROM dump issues"
+                    dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad game/firmware dump issues"
                     self.embed["game_info"]["notes"].append(dump_hash_warning)
 
                 timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
@@ -432,6 +436,8 @@ class LogFileReader(Cog):
                     message.channel.id == config.bot_log_allowed_channels["support"]
                     or message.channel.id
                     == config.bot_log_allowed_channels["patreon-support"]
+                    or message.channel.id
+                    == config.bot_log_allowed_channels["linux-master-race"]
                 ):
                     if re.match(pr_version, self.embed["emu_info"]["ryu_version"]):
                         pr_version_warning = f"**⚠️ PR build logs should be posted in <#{config.bot_log_allowed_channels['pr-testing']}>**"
@@ -519,19 +525,27 @@ class LogFileReader(Cog):
                     await message.channel.send(
                         f"The log file `{filename}` appears to be a duplicate {author_mention}. Please upload a more recent file."
                     )
-            elif is_log_file and not is_ryujinx_log_file and message.channel.id in self.bot_log_allowed_channels.values():
+            elif (
+                is_log_file
+                and not is_ryujinx_log_file
+                and message.channel.id in self.bot_log_allowed_channels.values()
+            ):
                 return await message.channel.send(
                     f"{author_mention} Your file does not match the Ryujinx log format. Please check your file."
                 )
-            elif is_log_file and not message.channel.id in self.bot_log_allowed_channels.values():
-                return await message.channel.send(
+            elif (
+                is_log_file
+                and not message.channel.id in self.bot_log_allowed_channels.values()
+            ):
+                return await message.author.send(
                     "\n".join(
                         (
-                            f"{author_mention} Please upload log files to the correct location:\n",
+                            f"{author_mention} Please upload Ryujinx log files to the correct location:\n",
                             f'<#{config.bot_log_allowed_channels["support"]}>: General help and troubleshooting',
-                            f'<#{config.bot_log_allowed_channels["patreon-suport"]}>: Help and troubleshooting for Patreon subscribers',
+                            f'<#{config.bot_log_allowed_channels["patreon-support"]}>: Help and troubleshooting for Patreon subscribers',
                             f'<#{config.bot_log_allowed_channels["development"]}>: Ryujinx development discussion',
                             f'<#{config.bot_log_allowed_channels["pr-testing"]}>: Discussion of in-progress pull request builds',
+                            f'<#{config.bot_log_allowed_channels["linux-master-race"]}>: Linux support and discussion',
                         )
                     )
                 )
