@@ -181,6 +181,11 @@ class LogFileReader(Cog):
                                 5) Upload the latest log file.""",
                     inline=False,
                 )
+                log_embed.add_field(
+                    name="Latest Error Snippet",
+                    value=self.embed["game_info"]["errors"],
+                    inline=False,
+                )
             else:
                 log_embed.add_field(
                     name="Latest Error Snippet",
@@ -280,16 +285,6 @@ class LogFileReader(Cog):
                             f"Settings exception: {setting_name}: {type(error).__name__}"
                         )
                         continue
-                # Game name parsed last so that user settings are visible with empty log
-                self.embed["game_info"]["game_name"] = (
-                    re.search(
-                        r"Loader LoadNca: Application Loaded:\s([^;\n\r]*)",
-                        log_file,
-                        re.MULTILINE,
-                    )
-                    .group(1)
-                    .rstrip()
-                )
 
                 def analyse_error_message(log_file=log_file):
                     try:
@@ -316,12 +311,21 @@ class LogFileReader(Cog):
 
                         shader_cache_collision = error_search("Cache collision found")
                         dump_hash_warning = error_search("ResultFsInvalidIvfcHash")
+                        shader_cache_corruption = error_search(
+                            """Object reference not set to an instance of an object.
+                                                                at Ryujinx.Graphics.Gpu.Shader.ShaderCache.Initialize()"""
+                        )
                         last_errors = "\n".join(
                             errors[-1][:2] if "|E|" in errors[-1][0] else ""
                         )
                     except IndexError:
                         last_errors = None
-                    return (last_errors, shader_cache_collision, dump_hash_warning)
+                    return (
+                        last_errors,
+                        shader_cache_collision,
+                        dump_hash_warning,
+                        shader_cache_corruption,
+                    )
 
                 # Finds the lastest error denoted by |E| in the log and its first line
                 # Also warns of shader cache collisions
@@ -329,15 +333,29 @@ class LogFileReader(Cog):
                     last_error_snippet,
                     shader_cache_warn,
                     dump_hash_warning,
+                    shader_cache_corruption_warn,
                 ) = analyse_error_message()
                 if last_error_snippet:
                     self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
                 else:
                     pass
+                # Game name parsed last so that user settings are visible with empty log
+                self.embed["game_info"]["game_name"] = (
+                    re.search(
+                        r"Loader LoadNca: Application Loaded:\s([^;\n\r]*)",
+                        log_file,
+                        re.MULTILINE,
+                    )
+                    .group(1)
+                    .rstrip()
+                )
 
                 if shader_cache_warn:
                     shader_cache_warn = f"⚠️ Cache collision detected. Investigate possible shader cache issues"
                     self.embed["game_info"]["notes"].append(shader_cache_warn)
+
+                if shader_cache_corruption_warn:
+                    shader_cache_corruption_warn = f"⚠️ Cache corruption detected. Investigate possible shader cache issues"
 
                 if dump_hash_warning:
                     dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad game/firmware dump issues"
