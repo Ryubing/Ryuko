@@ -251,7 +251,7 @@ class LogFileReader(Cog):
                                     "-1": "Custom",
                                     "1": "Native (720p/1080p)",
                                     "2": "2x (1440p/2160p)",
-                                    "3": "3x (2160p/31240p)",
+                                    "3": "3x (2160p/3240p)",
                                     "4": "4x (2880p/4320p)",
                                 }
                                 setting[name] = resolution_map[setting_value]
@@ -305,6 +305,16 @@ class LogFileReader(Cog):
                             f"Settings exception: {setting_name}: {type(error).__name__}"
                         )
                         continue
+                # Game name parsed last so that user settings are visible with empty log
+                self.embed["game_info"]["game_name"] = (
+                    re.search(
+                        r"Loader LoadNca: Application Loaded:\s([^;\n\r]*)",
+                        log_file,
+                        re.MULTILINE,
+                    )
+                    .group(1)
+                    .rstrip()
+                )
 
                 def analyse_error_message(log_file=log_file):
                     try:
@@ -319,21 +329,23 @@ class LogFileReader(Cog):
                             elif line[0] == " " or line == "":
                                 curr_error_lines.append(line)
 
-                        def error_search(search_term):
-                            found_term = bool(
-                                [
-                                    line
-                                    for line in errors
-                                    if any(search_term in string for string in line)
-                                ]
-                            )
-                            return found_term
+                        def error_search(search_terms):
+                            for term in search_terms:
+                                for error_lines in errors:
+                                    line = "\n".join(error_lines)
+                                    if term in line:
+                                        return True
 
-                        shader_cache_collision = error_search("Cache collision found")
-                        dump_hash_warning = error_search("ResultFsInvalidIvfcHash")
+                            return False
+
+                        shader_cache_collision = error_search(["Cache collision found"])
+                        dump_hash_warning = error_search(["ResultFsInvalidIvfcHash"])
                         shader_cache_corruption = error_search(
-                            """Object reference not set to an instance of an object.
-                                                                at Ryujinx.Graphics.Gpu.Shader.ShaderCache.Initialize()"""
+                            [
+                                """Object reference not set to an instance of an object.
+                                                                at Ryujinx.Graphics.Gpu.Shader.ShaderCache.Initialize()""",
+                                "System.IO.InvalidDataException: End of Central Directory record could not be found",
+                            ]
                         )
                         last_errors = "\n".join(
                             errors[-1][:2] if "|E|" in errors[-1][0] else ""
@@ -348,7 +360,7 @@ class LogFileReader(Cog):
                     )
 
                 # Finds the lastest error denoted by |E| in the log and its first line
-                # Also warns of shader cache collisions
+                # Also warns of common issues
                 (
                     last_error_snippet,
                     shader_cache_warn,
@@ -376,6 +388,9 @@ class LogFileReader(Cog):
 
                 if shader_cache_corruption_warn:
                     shader_cache_corruption_warn = f"⚠️ Cache corruption detected. Investigate possible shader cache issues"
+                    self.embed["game_info"]["notes"].append(
+                        shader_cache_corruption_warn
+                    )
 
                 if dump_hash_warning:
                     dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad game/firmware dump issues"
