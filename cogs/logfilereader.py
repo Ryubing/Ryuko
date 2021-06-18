@@ -66,51 +66,71 @@ class LogFileReader(Cog):
         log_file = re.search(log_file_header_regex, log_file).group(0)
 
         def get_hardware_info(log_file=log_file):
-            try:
-                self.embed["hardware_info"]["cpu"] = (
-                    re.search(r"CPU:\s([^;\n\r]*)", log_file, re.MULTILINE)
-                    .group(1)
-                    .rstrip()
-                )
-                self.embed["hardware_info"]["ram"] = (
-                    re.search(r"RAM:(\sTotal)?\s([^;\n\r]*)", log_file, re.MULTILINE)
-                    .group(2)
-                    .rstrip()
-                )
-                self.embed["hardware_info"]["os"] = (
-                    re.search(r"Operating System:\s([^;\n\r]*)", log_file, re.MULTILINE)
-                    .group(1)
-                    .rstrip()
-                )
-                self.embed["hardware_info"]["gpu"] = (
-                    re.search(
-                        r"PrintGpuInformation:\s([^;\n\r]*)", log_file, re.MULTILINE
-                    )
-                    .group(1)
-                    .rstrip()
-                )
-            except AttributeError:
-                pass
+            for setting in self.embed["hardware_info"]:
+                try:
+                    if setting == "cpu":
+                        self.embed["hardware_info"][setting] = (
+                            re.search(r"CPU:\s([^;\n\r]*)", log_file, re.MULTILINE)
+                            .group(1)
+                            .rstrip()
+                        )
+                    if setting == "ram":
+                        self.embed["hardware_info"][setting] = (
+                            re.search(
+                                r"RAM:(\sTotal)?\s([^;\n\r]*)", log_file, re.MULTILINE
+                            )
+                            .group(2)
+                            .rstrip()
+                        )
+                    if setting == "os":
+                        self.embed["hardware_info"][setting] = (
+                            re.search(
+                                r"Operating System:\s([^;\n\r]*)",
+                                log_file,
+                                re.MULTILINE,
+                            )
+                            .group(1)
+                            .rstrip()
+                        )
+                    if setting == "gpu":
+                        self.embed["hardware_info"][setting] = (
+                            re.search(
+                                r"PrintGpuInformation:\s([^;\n\r]*)",
+                                log_file,
+                                re.MULTILINE,
+                            )
+                            .group(1)
+                            .rstrip()
+                        )
+                except AttributeError:
+                    continue
 
         def get_ryujinx_info(log_file=log_file):
-            try:
-                self.embed["emu_info"]["ryu_version"] = [
-                    line.split()[-1]
-                    for line in log_file.splitlines()
-                    if "Ryujinx Version:" in line
-                ][0]
-                self.embed["emu_info"]["logs_enabled"] = (
-                    re.search(r"Logs Enabled:\s([^;\n\r]*)", log_file, re.MULTILINE)
-                    .group(1)
-                    .rstrip()
-                )
-                self.embed["emu_info"]["ryu_firmware"] = [
-                    line.split()[-1]
-                    for line in log_file.splitlines()
-                    if "Firmware Version:" in line
-                ][0]
-            except (AttributeError, IndexError):
-                pass
+            # try:
+            for setting in self.embed["emu_info"]:
+                try:
+                    if setting == "ryu_version":
+                        self.embed["emu_info"][setting] = [
+                            line.split()[-1]
+                            for line in log_file.splitlines()
+                            if "Ryujinx Version:" in line
+                        ][0]
+                    if setting == "logs_enabled":
+                        self.embed["emu_info"][setting] = (
+                            re.search(
+                                r"Logs Enabled:\s([^;\n\r]*)", log_file, re.MULTILINE
+                            )
+                            .group(1)
+                            .rstrip()
+                        )
+                    if setting == "ryu_firmware":
+                        self.embed["emu_info"]["ryu_firmware"] = [
+                            line.split()[-1]
+                            for line in log_file.splitlines()
+                            if "Firmware Version:" in line
+                        ][0]
+                except (AttributeError, IndexError):
+                    continue
 
         def format_log_embed():
             cleaned_game_name = re.sub(
@@ -181,6 +201,11 @@ class LogFileReader(Cog):
                                 5) Upload the latest log file.""",
                     inline=False,
                 )
+                log_embed.add_field(
+                    name="Latest Error Snippet",
+                    value=self.embed["game_info"]["errors"],
+                    inline=False,
+                )
             else:
                 log_embed.add_field(
                     name="Latest Error Snippet",
@@ -226,7 +251,7 @@ class LogFileReader(Cog):
                                     "-1": "Custom",
                                     "1": "Native (720p/1080p)",
                                     "2": "2x (1440p/2160p)",
-                                    "3": "3x (2160p/31240p)",
+                                    "3": "3x (2160p/3240p)",
                                     "4": "4x (2880p/4320p)",
                                 }
                                 setting[name] = resolution_map[setting_value]
@@ -304,40 +329,68 @@ class LogFileReader(Cog):
                             elif line[0] == " " or line == "":
                                 curr_error_lines.append(line)
 
-                        def error_search(search_term):
-                            found_term = bool(
-                                [
-                                    line
-                                    for line in errors
-                                    if any(search_term in string for string in line)
-                                ]
-                            )
-                            return found_term
+                        def error_search(search_terms):
+                            for term in search_terms:
+                                for error_lines in errors:
+                                    line = "\n".join(error_lines)
+                                    if term in line:
+                                        return True
 
-                        shader_cache_collision = error_search("Cache collision found")
-                        dump_hash_warning = error_search("ResultFsInvalidIvfcHash")
+                            return False
+
+                        shader_cache_collision = error_search(["Cache collision found"])
+                        dump_hash_warning = error_search(["ResultFsInvalidIvfcHash"])
+                        shader_cache_corruption = error_search(
+                            [
+                                """Object reference not set to an instance of an object.
+                                                                at Ryujinx.Graphics.Gpu.Shader.ShaderCache.Initialize()""",
+                                "System.IO.InvalidDataException: End of Central Directory record could not be found",
+                            ]
+                        )
                         last_errors = "\n".join(
                             errors[-1][:2] if "|E|" in errors[-1][0] else ""
                         )
                     except IndexError:
                         last_errors = None
-                    return (last_errors, shader_cache_collision, dump_hash_warning)
+                    return (
+                        last_errors,
+                        shader_cache_collision,
+                        dump_hash_warning,
+                        shader_cache_corruption,
+                    )
 
                 # Finds the lastest error denoted by |E| in the log and its first line
-                # Also warns of shader cache collisions
+                # Also warns of common issues
                 (
                     last_error_snippet,
                     shader_cache_warn,
                     dump_hash_warning,
+                    shader_cache_corruption_warn,
                 ) = analyse_error_message()
                 if last_error_snippet:
                     self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
                 else:
                     pass
+                # Game name parsed last so that user settings are visible with empty log
+                self.embed["game_info"]["game_name"] = (
+                    re.search(
+                        r"Loader LoadNca: Application Loaded:\s([^;\n\r]*)",
+                        log_file,
+                        re.MULTILINE,
+                    )
+                    .group(1)
+                    .rstrip()
+                )
 
                 if shader_cache_warn:
                     shader_cache_warn = f"⚠️ Cache collision detected. Investigate possible shader cache issues"
                     self.embed["game_info"]["notes"].append(shader_cache_warn)
+
+                if shader_cache_corruption_warn:
+                    shader_cache_corruption_warn = f"⚠️ Cache corruption detected. Investigate possible shader cache issues"
+                    self.embed["game_info"]["notes"].append(
+                        shader_cache_corruption_warn
+                    )
 
                 if dump_hash_warning:
                     dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad game/firmware dump issues"
