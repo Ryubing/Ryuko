@@ -372,15 +372,18 @@ class LogFileReader(Cog):
                 else:
                     pass
                 # Game name parsed last so that user settings are visible with empty log
-                self.embed["game_info"]["game_name"] = (
-                    re.search(
-                        r"Loader LoadNca: Application Loaded:\s([^;\n\r]*)",
-                        log_file,
-                        re.MULTILINE,
+                try:
+                    self.embed["game_info"]["game_name"] = (
+                        re.search(
+                            r"Loader LoadNca: Application Loaded:\s([^;\n\r]*)",
+                            log_file,
+                            re.MULTILINE,
+                        )
+                        .group(1)
+                        .rstrip()
                     )
-                    .group(1)
-                    .rstrip()
-                )
+                except AttributeError:
+                    pass
 
                 if shader_cache_warn:
                     shader_cache_warn = f"⚠️ Cache collision detected. Investigate possible shader cache issues"
