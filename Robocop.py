@@ -209,6 +209,15 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    # This array must contain the keywords that determine if the sender is a steam bot message
+    steambot_keywords = ["http", "steam", "profile"]
+
+    # If all the keywords are present in the sender's message he is automatically banned
+    if all(x in message.content for x in steambot_keywords):
+        await message.author.ban()
+        await message.delete()
+        await message.channel.send("Die steam bot! :kek:", delete_after=20.0)
+    
     if (message.guild) and (message.guild.id not in config.guild_whitelist):
         return
 
