@@ -214,7 +214,7 @@ async def on_message(message):
 
     # If all the keywords are present in the sender's message he is automatically banned
     if all(x in message.content for x in steambot_keywords):
-        await message.author.ban()
+        await message.author.kick()
         await message.delete()
         await message.channel.send("Die steam bot! :kek:", delete_after=20.0)
     
