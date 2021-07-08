@@ -210,7 +210,7 @@ async def on_message(message):
         return
 
     # This array must contain the keywords that determine if the sender is a steam bot message
-    steambot_keywords = ["http", "steam", "profile"]
+    steambot_keywords = ["http","/", "steam", ".com"]
 
     # If all the keywords are present in the sender's message he is automatically banned
     if all(x in message.content for x in steambot_keywords):
