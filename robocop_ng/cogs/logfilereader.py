@@ -151,7 +151,8 @@ class LogFileReader(Cog):
                 (
                     f"**Audio Backend:** `{self.embed['settings']['audio_backend']}`",
                     f"**Console Mode:** `{self.embed['settings']['docked']}`",
-                    f"**PPTC:** `{self.embed['settings']['pptc']}`",
+                    f"**PPTC cache:** `{self.embed['settings']['pptc']}`",
+                    f"**Shader cache:** `{self.embed['settings']['shader_cache']}`",
                     f"**V-Sync:** `{self.embed['settings']['vsync']}`",
                 )
             )
@@ -483,6 +484,20 @@ class LogFileReader(Cog):
                 if self.embed["emu_info"]["ryu_firmware"] == "Unknown":
                     firmware_warning = f"**❌ Nintendo Switch firmware not found**"
                     self.embed["game_info"]["notes"].append(firmware_warning)
+
+                if self.embed["settings"]["audio_backend"] == "Dummy":
+                    dummy_warning = (
+                        f"⚠️ Dummy audio backend, consider changing to SDL2 or OpenAL"
+                    )
+                    self.embed["game_info"]["notes"].append(dummy_warning)
+
+                if self.embed["settings"]["pptc"] == "Disabled":
+                    pptc_warning = f"⚠️ PPTC cache should be enabled"
+                    self.embed["game_info"]["notes"].append(pptc_warning)
+
+                if self.embed["settings"]["shader_cache"] == "Disabled":
+                    shader_warning = f"⚠️ Shader cache should be enabled"
+                    self.embed["game_info"]["notes"].append(shader_warning)
 
                 mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
                 pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
