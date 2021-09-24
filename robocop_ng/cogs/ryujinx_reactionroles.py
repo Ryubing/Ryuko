@@ -17,7 +17,7 @@ class RyujinxReactionRoles(Cog):
             "👹": "Looking for LDN game (Monster Hunter Generations Ultimate)",
             "👺": "Looking for LDN game (Monster Hunter Rise)",
             "⚔️": "Looking for LDN game (Super Smash Bros. Ultimate)",
-            "🏎️": "Looking for LDN game (Mario Kart 8 Deluxe)",
+            "🏎️": "Looking for LDN game (Mario Kart 8)",
             "🍃": "Looking for LDN game (Animal Crossing: New Horizons)",
             "➡": "Looking for LDN game (Others)",
             "🚩": "Testers",
@@ -46,7 +46,7 @@ class RyujinxReactionRoles(Cog):
           🖌️ Splatoon 2
           👹 Monster Hunter Generations Ultimate
           👺 Monster Hunter Rise
-          🏎️ Mario Kart 8 Deluxe
+          🏎️ Mario Kart 8 (Deluxe)
           🍃 Animal Crossing: New Horizons 
           ⚔️ Super Smash Bros Ultimate 
           ➡ Others
