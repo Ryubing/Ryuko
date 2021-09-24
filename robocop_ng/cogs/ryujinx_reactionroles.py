@@ -52,7 +52,9 @@ class RyujinxReactionRoles(Cog):
           ➡ Others
 
           React 🚩 to get "Testers" Role.
-                        """
+          To remove the role, Simply unreact to it.
+      
+                         """
             embed = discord.Embed(
                 title="Select your role", description=description, color=27491
             )
