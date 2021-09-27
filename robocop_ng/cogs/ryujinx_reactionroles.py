@@ -24,6 +24,26 @@ class RyujinxReactionRoles(Cog):
         }  # The mapping of emoji ids to the role.
         self.file = "data/reactionroles.json"  # the file to store the required reaction role data. (message id of the RR message.)
 
+    async def handle_offline_reaction_add(self, m, guild):
+        for x in m.reactions:
+                for y in await x.users().flatten():
+                    if self.emoji_map.get(x.emoji) is not None:
+                        role = discord.utils.get(
+                            guild.roles, name=self.emoji_map[str(x.emoji)]
+                        )
+                        if not y in role.members and not y.bot:
+                            await guild.get_member(y.id).add_roles(role)
+                    else:
+                        await m.clear_reaction(x.emoji)
+
+    async def handle_offline_reaction_remove(self, m, guild):
+        for x in self.emoji_map:
+            role = discord.utils.get(guild.roles, name=self.emoji_map[x])
+            for x in m.reactions:
+                for y in role.members:
+                    if y not in await x.users().flatten():
+                        await guild.get_member(y.id).remove_roles(role)
+
     @Cog.listener()
     async def on_ready(self):
 
@@ -52,11 +72,9 @@ class RyujinxReactionRoles(Cog):
           ➡ Others
 
           React 🚩 to get "Testers" Role.
-          To remove the role, Simply unreact to it.
-      
                          """
             embed = discord.Embed(
-                title="Select your role", description=description, color=27491
+                title="Select your role", description=description, color=27491, footer="To remove the role, simply unreact to the reaction of role."
             )
             message = await channel.send(embed=embed)
 
@@ -65,28 +83,12 @@ class RyujinxReactionRoles(Cog):
 
             with open(self.file, "w") as f:
                 json.dump({"id": message.id}, f)
-
+        
         m = discord.utils.get(await channel.history().flatten(), id=msg.get("id"))
-
-        if m and m.reactions:
-            for x in m.reactions:
-                for y in await x.users().flatten():
-                    if self.emoji_map.get(x.emoji) is not None:
-                        role = discord.utils.get(
-                            guild.roles, name=self.emoji_map[str(x.emoji)]
-                        )
-                        if not y in role.members and not y.bot:
-                            await guild.get_member(y.id).add_roles(role)
-                    else:
-                        await m.clear_reaction(x.emoji)
-
-        for x in self.emoji_map:
-            role = discord.utils.get(guild.roles, name=self.emoji_map[x])
-            for x in m.reactions:
-                for y in role.members:
-                    if y not in await x.users().flatten():
-                        await guild.get_member(y.id).remove_roles(role)
-
+        
+        await self.handle_offline_reaction_add(m, guild)
+        await self.handle_offline_reaction_remove(m, guild)
+            
     @Cog.listener()
     async def on_raw_reaction_add(self, payload):
         if payload.member.bot:
@@ -103,7 +105,7 @@ class RyujinxReactionRoles(Cog):
                     if role is not None:
                         await payload.member.add_roles(role)
                     else:
-                        print("Role not found.")
+                        print(f"Role {self.emoji_map[payload.emoji.name]} not found.")
                 else:
                     m = discord.utils.get(
                         await self.bot.guilds[0]
