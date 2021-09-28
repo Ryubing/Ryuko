@@ -76,7 +76,7 @@ class RyujinxReactionRoles(Cog):
             embed = discord.Embed(
                 title="**Select your roles**", description=description, color=27491
             )
-            embed.set_footer(text="To remove the role, simply unreact to the reaction of role.")
+            embed.set_footer(text="To remove the role, simply remove the reaction.")
             message = await channel.send(embed=embed)
 
             for x in self.emoji_map:
