@@ -46,7 +46,7 @@ class RyujinxReactionRoles(Cog):
 
     @Cog.listener()
     async def on_ready(self):
-        print(self.emoji_map.keys())
+    
         guild = self.bot.guilds[0]  # The ryu guild in which the bot is.
         channel = guild.get_channel(self.channel_id)
 
