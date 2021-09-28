@@ -13,7 +13,7 @@ class RyujinxReactionRoles(Cog):
             config.reaction_roles_channel_id
         )  # The channel to send the reaction role message. (self-roles channel)
         self.emoji_map = {
-            "🖌️": "Looking for LDN game (Splatoon 2)",
+            "🦑": "Looking for LDN game (Splatoon 2)",
             "👹": "Looking for LDN game (Monster Hunter Generations Ultimate)",
             "👺": "Looking for LDN game (Monster Hunter Rise)",
             "⚔️": "Looking for LDN game (Super Smash Bros. Ultimate)",
@@ -46,8 +46,8 @@ class RyujinxReactionRoles(Cog):
 
     @Cog.listener()
     async def on_ready(self):
-
-        guild = self.bot.guilds[0]  # The ryu guild in which the bot is. (The o
+        print(self.emoji_map.keys())
+        guild = self.bot.guilds[0]  # The ryu guild in which the bot is.
         channel = guild.get_channel(self.channel_id)
 
         if not os.path.exists(self.file):
@@ -63,7 +63,7 @@ class RyujinxReactionRoles(Cog):
             os.remove(self.file)
             description = """
           _React to this message to get your "Looking for LDN game" roles._
-          🖌️ Splatoon 2
+          🦑 Splatoon 2
           👹 Monster Hunter Generations Ultimate
           👺 Monster Hunter Rise
           🏎️ Mario Kart 8 (Deluxe)
