@@ -133,9 +133,9 @@ class RyujinxReactionRoles(Cog):
                     name = self.emoji_map[str(payload.emoji.name)],
                 )
 
-                await guild.get_member(payload.user_id).remove_roles(
+                await guild.get_member(payload.user_id).remove_roles(   # payload.member.remove_roles will throw error
                     role
-                )  # payload.member.remove_roles will throw error
+                ) 
 
 
 def setup(bot):
