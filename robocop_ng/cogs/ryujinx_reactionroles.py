@@ -24,25 +24,25 @@ class RyujinxReactionRoles(Cog):
         }  # The mapping of emoji ids to the role.
         self.file = "data/reactionroles.json"  # the file to store the required reaction role data. (message id of the RR message.)
 
-    async def handle_offline_reaction_add(self, m, guild):
+    async def handle_offline_reaction_add(self, m):
         for x in m.reactions:
                 for y in await x.users().flatten():
                     if self.emoji_map.get(x.emoji) is not None:
                         role = discord.utils.get(
-                            guild.roles, name=self.emoji_map[str(x.emoji)]
+                            m.guild.roles, name=self.emoji_map[str(x.emoji)]
                         )
                         if not y in role.members and not y.bot:
-                            await guild.get_member(y.id).add_roles(role)
+                            await m.guild.get_member(y.id).add_roles(role)
                     else:
                         await m.clear_reaction(x.emoji)
 
-    async def handle_offline_reaction_remove(self, m, guild):
+    async def handle_offline_reaction_remove(self, m):
         for x in self.emoji_map:
-            role = discord.utils.get(guild.roles, name=self.emoji_map[x])
+            role = discord.utils.get(m.guild.roles, name=self.emoji_map[x])
             for x in m.reactions:
                 for y in role.members:
                     if y not in await x.users().flatten():
-                        await guild.get_member(y.id).remove_roles(role)
+                        await m.guild.get_member(y.id).remove_roles(role)
 
     @Cog.listener()
     async def on_ready(self):
@@ -87,8 +87,8 @@ class RyujinxReactionRoles(Cog):
         
         m = discord.utils.get(await channel.history().flatten(), id=msg.get("id"))
         
-        await self.handle_offline_reaction_add(m, guild)
-        await self.handle_offline_reaction_remove(m, guild)
+        await self.handle_offline_reaction_add(m)
+        await self.handle_offline_reaction_remove(m)
             
     @Cog.listener()
     async def on_raw_reaction_add(self, payload):
