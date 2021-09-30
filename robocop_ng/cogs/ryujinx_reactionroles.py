@@ -130,7 +130,7 @@ class RyujinxReactionRoles(Cog):
 
                 role = discord.utils.get(
                     self.bot.get_guild(payload.guild_id).roles,
-                    name=self.emoji_map[str(payload.emoji.name)],
+                    name = self.emoji_map[str(payload.emoji.name)],
                 )
 
                 await guild.get_member(payload.user_id).remove_roles(
