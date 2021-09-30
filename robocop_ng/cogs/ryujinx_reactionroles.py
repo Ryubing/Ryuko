@@ -10,8 +10,8 @@ class RyujinxReactionRoles(Cog):
     def __init__(self, bot):
         self.bot = bot
         self.channel_id = (
-            config.reaction_roles_channel_id
-        )  # The channel to send the reaction role message. (self-roles channel)
+            config.reaction_roles_channel_id # The channel to send the reaction role message. (self-roles channel)
+        )  
         self.emoji_map = {
             "🦑": "Looking for LDN game (Splatoon 2)",
             "👹": "Looking for LDN game (Monster Hunter Generations Ultimate)",
