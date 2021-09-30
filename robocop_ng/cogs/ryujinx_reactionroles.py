@@ -101,7 +101,7 @@ class RyujinxReactionRoles(Cog):
                 if self.emoji_map.get(payload.emoji.name) is not None:
                     role = discord.utils.get(
                         self.bot.get_guild(payload.guild_id).roles,
-                        name=self.emoji_map[payload.emoji.name],
+                        name=self.emoji_map[str(payload.emoji.name)],
                     )
                     if role is not None:
                         await payload.member.add_roles(role)
@@ -122,7 +122,7 @@ class RyujinxReactionRoles(Cog):
         with open(self.file, "r") as f:
             msg_id = json.load(f).get("id")
         if payload.message_id == msg_id:
-            if self.emoji_map[payload.emoji.name]:
+            if self.emoji_map[str(payload.emoji.name)]:
 
                 guild = discord.utils.find(
                     lambda guild: guild.id == payload.guild_id, self.bot.guilds
@@ -130,7 +130,7 @@ class RyujinxReactionRoles(Cog):
 
                 role = discord.utils.get(
                     self.bot.get_guild(payload.guild_id).roles,
-                    name=self.emoji_map[payload.emoji.name],
+                    name=self.emoji_map[str(payload.emoji.name)],
                 )
 
                 await guild.get_member(payload.user_id).remove_roles(
