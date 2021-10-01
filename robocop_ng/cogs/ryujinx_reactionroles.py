@@ -39,9 +39,9 @@ class RyujinxReactionRoles(Cog):
     async def handle_offline_reaction_remove(self, m):
         for x in self.emoji_map:
             role = discord.utils.get(m.guild.roles, name=self.emoji_map[x])
-            for x in m.reactions:
+            for z in m.reactions:
                 for y in role.members:
-                    if y not in await x.users().flatten():
+                    if y not in await z.users().flatten():
                         await m.guild.get_member(y.id).remove_roles(role)
 
     @Cog.listener()
