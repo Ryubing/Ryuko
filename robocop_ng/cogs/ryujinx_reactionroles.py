@@ -10,8 +10,8 @@ class RyujinxReactionRoles(Cog):
     def __init__(self, bot):
         self.bot = bot
         self.channel_id = (
-            config.reaction_roles_channel_id # The channel to send the reaction role message. (self-roles channel)
-        )  
+            config.reaction_roles_channel_id  # The channel to send the reaction role message. (self-roles channel)
+        )
         self.emoji_map = {
             "🦑": "Looking for LDN game (Splatoon 2)",
             "👹": "Looking for LDN game (Monster Hunter Generations Ultimate)",
@@ -26,15 +26,15 @@ class RyujinxReactionRoles(Cog):
 
     async def handle_offline_reaction_add(self, m):
         for x in m.reactions:
-                for y in await x.users().flatten():
-                    if self.emoji_map.get(x.emoji) is not None:
-                        role = discord.utils.get(
-                            m.guild.roles, name=self.emoji_map[str(x.emoji)]
-                        )
-                        if not y in role.members and not y.bot:
-                            await m.guild.get_member(y.id).add_roles(role)
-                    else:
-                        await m.clear_reaction(x.emoji)
+            for y in await x.users().flatten():
+                if self.emoji_map.get(x.emoji) is not None:
+                    role = discord.utils.get(
+                        m.guild.roles, name=self.emoji_map[str(x.emoji)]
+                    )
+                    if not y in role.members and not y.bot:
+                        await m.guild.get_member(y.id).add_roles(role)
+                else:
+                    await m.clear_reaction(x.emoji)
 
     async def handle_offline_reaction_remove(self, m):
         for x in self.emoji_map:
@@ -46,7 +46,7 @@ class RyujinxReactionRoles(Cog):
 
     @Cog.listener()
     async def on_ready(self):
-    
+
         guild = self.bot.guilds[0]  # The ryu guild in which the bot is.
         channel = guild.get_channel(self.channel_id)
 
@@ -84,12 +84,12 @@ class RyujinxReactionRoles(Cog):
 
             with open(self.file, "w") as f:
                 json.dump({"id": message.id}, f)
-        
+
         m = discord.utils.get(await channel.history().flatten(), id=msg.get("id"))
-        
+
         await self.handle_offline_reaction_add(m)
         await self.handle_offline_reaction_remove(m)
-            
+
     @Cog.listener()
     async def on_raw_reaction_add(self, payload):
         if payload.member.bot:
@@ -130,12 +130,14 @@ class RyujinxReactionRoles(Cog):
 
                 role = discord.utils.get(
                     self.bot.get_guild(payload.guild_id).roles,
-                    name = self.emoji_map[str(payload.emoji.name)],
+                    name=self.emoji_map[str(payload.emoji.name)],
                 )
 
-                await guild.get_member(payload.user_id).remove_roles(   # payload.member.remove_roles will throw error
+                await guild.get_member(
+                    payload.user_id
+                ).remove_roles(  # payload.member.remove_roles will throw error
                     role
-                ) 
+                )
 
 
 def setup(bot):
