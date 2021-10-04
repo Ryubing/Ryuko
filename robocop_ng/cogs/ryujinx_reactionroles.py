@@ -32,7 +32,7 @@ class RyujinxReactionRoles(Cog):
                         m.guild.roles, name=self.emoji_map[str(x.emoji)]
                     )
                     if not y in role.members and not y.bot:
-                        await m.guild.get_member(y.id).add_roles(role)
+                        await y.add_roles(role)
                 else:
                     await m.clear_reaction(x.emoji)
 
@@ -86,7 +86,7 @@ class RyujinxReactionRoles(Cog):
                 json.dump({"id": message.id}, f)
 
         m = discord.utils.get(await channel.history().flatten(), id=msg.get("id"))
-
+    
         await self.handle_offline_reaction_add(m)
         await self.handle_offline_reaction_remove(m)
 
