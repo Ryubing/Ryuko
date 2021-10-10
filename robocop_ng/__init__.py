@@ -8,6 +8,7 @@ import config
 
 import discord
 from discord.ext import commands
+from discord_slash import SlashCommand
 
 # TODO: check __name__ for __main__ nerd
 
@@ -56,6 +57,7 @@ bot = commands.Bot(
     command_prefix=get_prefix, description=config.bot_description, intents=intents
 )
 bot.help_command = commands.DefaultHelpCommand(dm_help=True)
+slash = SlashCommand(bot, sync_commands=True)
 
 bot.log = log
 bot.config = config
