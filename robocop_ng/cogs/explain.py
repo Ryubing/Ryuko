@@ -1,7 +1,7 @@
-from discord import Embed, Colour
-from discord.ext.commands import Bot, Cog
-from discord_slash import cog_ext, SlashContext
 import config
+from discord import Colour, Embed
+from discord.ext.commands import Bot, Cog
+from discord_slash import SlashContext, cog_ext
 
 
 class Explainer(Cog):
@@ -92,7 +92,7 @@ class Explainer(Cog):
         await ctx.send(embed=embed)
 
     @cog_ext.cog_slash(name="keys", description="How to dump prod.keys file.")
-    async def get_support(self, ctx: SlashContext):
+    async def explain_keys(self, ctx: SlashContext):
         embed = Embed(
             title=self.explanations["keys"]["title"],
             description=self.explanations["keys"]["body_text"],
@@ -101,7 +101,7 @@ class Explainer(Cog):
         await ctx.send(embed=embed)
 
     @cog_ext.cog_slash(name="firmware", description="How to dump system firmware.")
-    async def get_support(self, ctx: SlashContext):
+    async def explain_firmware(self, ctx: SlashContext):
         embed = Embed(
             title=self.explanations["firmware"]["title"],
             description=self.explanations["firmware"]["body_text"],
