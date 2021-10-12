@@ -13,7 +13,8 @@ class Explainer(Cog):
                 "body_text": """Shaders are small programs running on a graphic card that are responsible for rendering graphics like terrain, characters, explosions, grass etc. Since a PC cannot directly execute Switch shaders these have to be translated into a format a PC can understand. This translation process is time consuming and you'll notice it in two ways:
                                 \n1). Any new shaders that are encountered will cause the emulation to pause until the translation is done, which causes stuttering and FPS drops. When you load a game for the first time a lot of translation will happen, but by playing more this stuttering decreases rapidly.
                                 \n2). Ryujinx will save any shaders a game uses (aka it caches them). When you launch a game Ryujinx will take some time loading those saved shaders to prevent the stuttering from happening again.
-                                \nFor a more technical explanation see here: https://blog.ryujinx.org/shader-cache-is-finally-here/""",
+                                \nFor a more technical explanation see here: https://blog.ryujinx.org/shader-cache-is-finally-here/
+                                \n**NOTE: Shaders contain copyrighted game code so you must _generate your own_. Using third-party shaders is considered piracy.**""",
                 "title": "Shaders & Shader Caches explained",
             },
             "pptc": {
@@ -37,7 +38,7 @@ class Explainer(Cog):
                                 \nLog files are saved in are saved in the `Logs` folder.
                                 Access this by doing `File > Open Log Folder` in Ryujinx, or by going to the folder directly where your `Ryujinx.exe` (Windows) or `Ryujinx` binary (Linux) is located.
                                 The last 3 logs from the last 3 boots of Ryujinx will be available. For support purposes, you'll usually want to drag and drop the largest one into Discord.
-                                \nIf you are unable to provide a log file, please provide your basic specs including: Ryujinx version, CPU model, GPU model and RAM amount, as well as **the name of the game and the version of the game you're having issues with.**
+                                \nIf you are unable to provide a log file, please provide your basic specs including: Ryujinx version, CPU model, GPU model and RAM amount, as well as **the name of the game and the version of the game you're having issues with (as well as any mods being used).**
                                 \n**Please be patient. Someone will help if you if they can and are available, but please also be mindful of people's time.**""",
                 "title": "Getting support for Ryujinx",
             },
@@ -50,6 +51,17 @@ class Explainer(Cog):
                 "body_text": """Firmware files contain the Switch OS (codenamed Horizon) as well as some small apps like the Home menu and the Mii applet. Occasionally some games may require a firmware upgrade in order to be playable.
                                 \nTo dump keys and firmware from your Switch, follow this guide: https://nh-server.github.io/switch-guide/user_guide/sysnand/making_essential_backups/""",
                 "title": "Firmware dumping explained",
+            },
+            "fifo": {
+                "body_text": """FIFO (First In First Out) refers to the command queue for the emulated GPU.
+                            Your CPU does the work to emulate the Switch GPU commands, so the FIFO percentage shown is the time spent actively processing these instructions.
+                            A higher FIFO percentage is not strictly related to performance, you may have high framerates while also having high FIFO and vice versa. Generally a high FIFO _could_ sometimes indicate an emulated GPU bottleneck.""",
+                "title": "FIFO explained",
+            },
+            "default_logs": {
+                "body_text": "Your default logging settings should look like the following screenshot:",
+                "image": "https://media.discordapp.net/attachments/410208610455519243/897471975570702336/unknown.png?width=582&height=609",
+                "title": "Default Ryujinx logging settings",
             },
         }
 
@@ -107,6 +119,28 @@ class Explainer(Cog):
             description=self.explanations["firmware"]["body_text"],
             colour=self.ryujinx_blue,
         )
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(name="fifo", description="Explains what FIFO is.")
+    async def explain_fifo(self, ctx: SlashContext):
+        embed = Embed(
+            title=self.explanations["fifo"]["title"],
+            description=self.explanations["fifo"]["body_text"],
+            colour=self.ryujinx_blue,
+        )
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(
+        name="logging_defaults",
+        description="Shows what the default logging settings are.",
+    )
+    async def default_logs(self, ctx: SlashContext):
+        embed = Embed(
+            title=self.explanations["default_logs"]["title"],
+            description=self.explanations["default_logs"]["body_text"],
+            colour=self.ryujinx_blue,
+        )
+        embed.set_image(url=self.explanations["default_logs"]["image"])
         await ctx.send(embed=embed)
 
     @cog_ext.cog_slash(name="test", description="A simple test command.")
