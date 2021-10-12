@@ -62,21 +62,22 @@ class RyujinxReactionRoles(Cog):
         if m is None:
             os.remove(self.file)
             description = """
-          _React to this message to get your "Looking for LDN game" roles._
-          🦑 Splatoon 2
-          👹 Monster Hunter Generations Ultimate
-          👺 Monster Hunter Rise
-          🏎️ Mario Kart 8 (Deluxe)
-          🍃 Animal Crossing: New Horizons 
-          ⚔️ Super Smash Bros Ultimate 
-          ➡ Others
+          *React to this message with the emojis given below to get your "Looking for LDN game" roles._*
+          
+          🦑 for _Splatoon 2_
+          👹 for _Monster Hunter Generations Ultimate_
+          👺 for _Monster Hunter Rise_
+          🏎️ for _Mario Kart 8 (Deluxe)_
+          🍃 for _Animal Crossing: New Horizons_
+          ⚔️ for _Super Smash Bros Ultimate_ and
+          ➡ for Others.
 
           React 🚩 to get "Testers" Role.
                          """
             embed = discord.Embed(
                 title="**Select your roles**", description=description, color=27491
             )
-            embed.set_footer(text="To remove the role, simply remove the reaction.")
+            embed.set_footer(text="To remove the role if you want, simply remove the corresponding reaction.")
             message = await channel.send(embed=embed)
 
             for x in self.emoji_map:
