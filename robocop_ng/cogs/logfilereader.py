@@ -48,7 +48,9 @@ class LogFileReader(Cog):
             "settings": {
                 "audio_backend": "Unknown",
                 "docked": "Unknown",
+                "expand_ram": "Unknown",
                 "ignore_missing_services": "Unknown",
+                "memory_manager": "Unknown",
                 "pptc": "Unknown",
                 "shader_cache": "Unknown",
                 "vsync": "Unknown",
@@ -276,7 +278,6 @@ class LogFileReader(Cog):
                                 }
                                 setting[name] = aspect_map[setting_value]
                             if name in [
-                                "ignore_missing_services",
                                 "pptc",
                                 "shader_cache",
                                 "vsync",
@@ -291,7 +292,9 @@ class LogFileReader(Cog):
                         "aspect_ratio": "AspectRatio",
                         "audio_backend": "AudioBackend",
                         "docked": "EnableDockedMode",
+                        "expand_ram": "ExpandRam",
                         "ignore_missing_services": "IgnoreMissingServices",
+                        "memory_manager": "MemoryManagerMode",
                         "pptc": "EnablePtc",
                         "resolution_scale": "ResScale",
                         "shader_cache": "EnableShaderCache",
@@ -469,6 +472,9 @@ class LogFileReader(Cog):
                         .replace(" ", "")
                         .split(",")
                     )
+                    if "Debug" in user_logs:
+                        debug_warning = f"⚠️ **Debug logs enabled will have a negative impact on performance**"
+                        self.embed["game_info"]["notes"].append(debug_warning)
                     disabled_logs = set(default_logs).difference(set(user_logs))
                     if disabled_logs:
                         logs_status = [
@@ -485,6 +491,12 @@ class LogFileReader(Cog):
                     firmware_warning = f"**❌ Nintendo Switch firmware not found**"
                     self.embed["game_info"]["notes"].append(firmware_warning)
 
+                if self.embed["settings"]["anisotropic_filtering"] != "Auto":
+                    anisotropic_filtering_warning = "⚠️ Anisotropic filtering not set to `Auto` can cause graphical issues"
+                    self.embed["game_info"]["notes"].append(
+                        anisotropic_filtering_warning
+                    )
+
                 if self.embed["settings"]["audio_backend"] == "Dummy":
                     dummy_warning = (
                         f"⚠️ Dummy audio backend, consider changing to SDL2 or OpenAL"
@@ -492,12 +504,28 @@ class LogFileReader(Cog):
                     self.embed["game_info"]["notes"].append(dummy_warning)
 
                 if self.embed["settings"]["pptc"] == "Disabled":
-                    pptc_warning = f"⚠️ PPTC cache should be enabled"
+                    pptc_warning = f"🔴 **PPTC cache should be enabled**"
                     self.embed["game_info"]["notes"].append(pptc_warning)
 
                 if self.embed["settings"]["shader_cache"] == "Disabled":
-                    shader_warning = f"⚠️ Shader cache should be enabled"
+                    shader_warning = f"🔴 **Shader cache should be enabled**"
                     self.embed["game_info"]["notes"].append(shader_warning)
+
+                if self.embed["settings"]["expand_ram"] == "True":
+                    expand_ram_warning = f"⚠️ `Expand DRAM size to 6GB` should only be enabled for 4K mods"
+                    self.embed["game_info"]["notes"].append(expand_ram_warning)
+
+                if self.embed["settings"]["memory_manager"] == "SoftwarePageTable":
+                    software_memory_manager_warning = "⚠️ `Software` setting in Memory Manager Mode will give slower performance than the default setting of `Host unchecked`"
+                    self.embed["game_info"]["notes"].append(
+                        software_memory_manager_warning
+                    )
+
+                if self.embed["settings"]["ignore_missing_services"] == "True":
+                    ignore_missing_services_warning = "⚠️ `Ignore Missing Services` being enabled can cause instability"
+                    self.embed["game_info"]["notes"].append(
+                        ignore_missing_services_warning
+                    )
 
                 mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
                 pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
@@ -528,7 +556,7 @@ class LogFileReader(Cog):
                         self.embed["game_info"]["notes"].append(custom_firmware_warning)
 
                 def severity(log_note_string):
-                    symbols = ["❌", "⚠️", "ℹ", "✅"]
+                    symbols = ["❌", "🔴", "⚠️", "ℹ", "✅"]
                     return next(
                         i
                         for i, symbol in enumerate(symbols)
