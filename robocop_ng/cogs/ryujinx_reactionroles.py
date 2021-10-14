@@ -9,9 +9,7 @@ from discord.ext.commands import Cog
 class RyujinxReactionRoles(Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.channel_id = (
-            config.reaction_roles_channel_id  # The channel to send the reaction role message. (self-roles channel)
-        )
+        self.channel_id = config.reaction_roles_channel_id  # The channel to send the reaction role message. (self-roles channel)
         self.emoji_map = {
             "🦑": "Looking for LDN game (Splatoon 2)",
             "👹": "Looking for LDN game (Monster Hunter Generations Ultimate)",
@@ -28,9 +26,7 @@ class RyujinxReactionRoles(Cog):
         for reaction in m.reactions:
             for user in await reaction.users().flatten():
                 if self.emoji_map.get(reaction.emoji) is not None:
-                    role = discord.utils.get(
-                        m.guild.roles, name=self.emoji_map[str(reaction.emoji)]
-                    )
+                    role = discord.utils.get(m.guild.roles, name=self.emoji_map[str(reaction.emoji)])
                     if not user in role.members and not user.bot:
                         await user.add_roles(role)
                 else:
@@ -74,9 +70,7 @@ class RyujinxReactionRoles(Cog):
 
           React 🚩 to get "Testers" Role.
                          """
-            embed = discord.Embed(
-                title="**Select your roles**", description=description, color=27491
-            )
+            embed = discord.Embed(title="**Select your roles**", description=description, color=27491)
             embed.set_footer(text="To remove the role if you want, simply remove the corresponding reaction.")
             message = await channel.send(embed=embed)
 
@@ -100,22 +94,13 @@ class RyujinxReactionRoles(Cog):
                 msg_id = json.load(f).get("id")  # Get the ID
             if payload.message_id == msg_id:
                 if self.emoji_map.get(payload.emoji.name) is not None:
-                    role = discord.utils.get(
-                        self.bot.get_guild(payload.guild_id).roles,
-                        name=self.emoji_map[str(payload.emoji.name)],
-                    )
+                    role = discord.utils.get(self.bot.get_guild(payload.guild_id).roles, name=self.emoji_map[str(payload.emoji.name)])
                     if role is not None:
                         await payload.member.add_roles(role)
                     else:
                         print(f"Role {self.emoji_map[payload.emoji.name]} not found.")
                 else:
-                    m = discord.utils.get(
-                        await self.bot.guilds[0]
-                        .get_channel(self.channel_id)
-                        .history()
-                        .flatten(),
-                        id=msg_id,
-                    )
+                    m = discord.utils.get(await self.bot.guilds[0].get_channel(self.channel_id).history().flatten(), id=msg_id)
                     await m.clear_reaction(payload.emoji.name)
 
     @Cog.listener()
@@ -125,20 +110,11 @@ class RyujinxReactionRoles(Cog):
         if payload.message_id == msg_id:
             if self.emoji_map[str(payload.emoji.name)]:
 
-                guild = discord.utils.find(
-                    lambda guild: guild.id == payload.guild_id, self.bot.guilds
-                )
+                guild = discord.utils.find(lambda guild: guild.id == payload.guild_id, self.bot.guilds)
 
-                role = discord.utils.get(
-                    self.bot.get_guild(payload.guild_id).roles,
-                    name=self.emoji_map[str(payload.emoji.name)],
-                )
+                role = discord.utils.get(self.bot.get_guild(payload.guild_id).roles, name=self.emoji_map[str(payload.emoji.name)])
 
-                await guild.get_member(
-                    payload.user_id
-                ).remove_roles(  # payload.member.remove_roles will throw error
-                    role
-                )
+                await guild.get_member(payload.user_id).remove_roles(role) # payload.member.remove_roles will throw error
 
 
 def setup(bot):
