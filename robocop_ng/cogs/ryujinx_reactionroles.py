@@ -42,7 +42,7 @@ class RyujinxReactionRoles(Cog):
 
     @Cog.listener()
     async def on_ready(self):
-
+      
         guild = self.bot.guilds[0]  # The ryu guild in which the bot is.
         channel = guild.get_channel(self.channel_id)
 
@@ -54,22 +54,18 @@ class RyujinxReactionRoles(Cog):
             msg = json.load(f)
 
         m = discord.utils.get(await channel.history().flatten(), id=msg.get("id"))
-
         if m is None:
             os.remove(self.file)
-            description = """
-          *React to this message with the emojis given below to get your "Looking for LDN game" roles._*
+            
+            emojis = list(self.emoji_map.keys())
+            description = "*React to this message with the emojis given below to get your 'Looking for LDN game' roles.* \n\n"
           
-          🦑 for _Splatoon 2_
-          👹 for _Monster Hunter Generations Ultimate_
-          👺 for _Monster Hunter Rise_
-          🏎️ for _Mario Kart 8 (Deluxe)_
-          🍃 for _Animal Crossing: New Horizons_
-          ⚔️ for _Super Smash Bros Ultimate_ and
-          ➡ for Others.
-
-          React 🚩 to get "Testers" Role.
-                         """
+            for x in emojis:
+              if self.emoji_map[x] == "Testers":
+                description+="\nReact {} to get the \"{}\" role.".format(x, self.emoji_map[x])
+              else:
+                description+="{} for _{}_ \n".format(x, self.emoji_map[x].split("(")[1].split(")")[0])
+            
             embed = discord.Embed(title="**Select your roles**", description=description, color=27491)
             embed.set_footer(text="To remove the role if you want, simply remove the corresponding reaction.")
             message = await channel.send(embed=embed)
