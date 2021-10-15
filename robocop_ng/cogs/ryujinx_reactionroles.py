@@ -62,9 +62,9 @@ class RyujinxReactionRoles(Cog):
           
             for x in emojis:
               if self.emoji_map[x] == "Testers":
-                description+="\nReact {} to get the \"{}\" role.".format(x, self.emoji_map[x])
+                description+=f"\nReact {x} to get the \"{self.emoji_map[x]}\" role."
               else:
-                description+="{} for _{}_ \n".format(x, self.emoji_map[x].split("(")[1].split(")")[0])
+                description+=f"{x} for _{self.emoji_map[x].split("(")[1].split(")")[0]}_ \n"
             
             embed = discord.Embed(title="**Select your roles**", description=description, color=27491)
             embed.set_footer(text="To remove the role if you want, simply remove the corresponding reaction.")
