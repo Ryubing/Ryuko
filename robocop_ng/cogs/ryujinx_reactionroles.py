@@ -67,7 +67,7 @@ class RyujinxReactionRoles(Cog):
                 description+=f"{x} for _{self.emoji_map[x].split("(")[1].split(")")[0]}_ \n"
             
             embed = discord.Embed(title="**Select your roles**", description=description, color=27491)
-            embed.set_footer(text="To remove the role if you want, simply remove the corresponding reaction.")
+            embed.set_footer(text="To remove a role, simply remove the corresponding reaction.")
             message = await channel.send(embed=embed)
 
             for x in self.emoji_map:
