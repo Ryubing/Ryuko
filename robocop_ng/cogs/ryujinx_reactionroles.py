@@ -127,7 +127,7 @@ class RyujinxReactionRoles(Cog):
                         .flatten(),
                         id=msg_id,
                     )
-                    await m.clear_reaction(payload.emoji.name)
+                    await m.clear_reaction(payload.emoji.name) 
 
     @Cog.listener()
     async def on_raw_reaction_remove(self, payload):
