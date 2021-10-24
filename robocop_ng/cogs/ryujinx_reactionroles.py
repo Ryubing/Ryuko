@@ -20,7 +20,7 @@ class RyujinxReactionRoles(Cog):
             "🏎️": "Looking for LDN game (Mario Kart 8)",
             "🍃": "Looking for LDN game (Animal Crossing: New Horizons)",
             "➡": "Looking for LDN game (Others)",
-            "🚩": "Testers",
+            "🚩": "Testers", # LDN roles should be placed *before* testers role, because of embed generating.
         }  # The mapping of emoji ids to the role.
         self.file = "data/reactionroles.json"  # the file to store the required reaction role data. (message id of the RR message.)
 
