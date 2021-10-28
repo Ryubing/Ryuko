@@ -65,91 +65,56 @@ class Explainer(Cog):
             },
         }
 
-    @cog_ext.cog_slash(
-        name="shaders", description="Explains how shaders and shader caches work."
-    )
-    async def explain_shaders(self, ctx: SlashContext):
-        embed = Embed(
-            title=self.explanations["shaders"]["title"],
-            description=self.explanations["shaders"]["body_text"],
+    def generate_embed(self, name, image=None):
+        return Embed(
+            title=self.explanations[name]["title"],
+            description=self.explanations[name]["body_text"],
             colour=self.ryujinx_blue,
         )
+
+    @cog_ext.cog_slash(name="logs", description="How to get Ryujinx log files.")
+    async def send_embed_logs(self, ctx: SlashContext):
+        embed = self.generate_embed("logs")
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(
+        name="shaders", description="Explains shaders and shader caches."
+    )
+    async def send_embed_shaders(self, ctx: SlashContext):
+        embed = self.generate_embed("shaders")
         await ctx.send(embed=embed)
 
     @cog_ext.cog_slash(name="pptc", description="Explains how PPTC caches work.")
-    async def explain_pptc(self, ctx: SlashContext):
-        embed = Embed(
-            title=self.explanations["pptc"]["title"],
-            description=self.explanations["pptc"]["body_text"],
-            colour=self.ryujinx_blue,
-        )
+    async def send_embed_pptc(self, ctx: SlashContext):
+        embed = self.generate_embed("pptc")
         await ctx.send(embed=embed)
 
-    @cog_ext.cog_slash(name="logs", description="How to get Ryujinx log files.")
-    async def explain_logs(self, ctx: SlashContext):
-        embed = Embed(
-            title=self.explanations["logs"]["title"],
-            description=self.explanations["logs"]["body_text"],
-            colour=self.ryujinx_blue,
-        )
+    @cog_ext.cog_slash(name="support", description="How to get support for Ryujinx.")
+    async def send_embed_support(self, ctx: SlashContext):
+        embed = self.generate_embed("support")
         await ctx.send(embed=embed)
 
-    @cog_ext.cog_slash(name="support", description="How to get help with Ryujinx.")
-    async def get_support(self, ctx: SlashContext):
-        embed = Embed(
-            title=self.explanations["support"]["title"],
-            description=self.explanations["support"]["body_text"],
-            colour=self.ryujinx_blue,
-        )
+    @cog_ext.cog_slash(name="keys", description="How to get keys for Ryujinx.")
+    async def send_embed_support(self, ctx: SlashContext):
+        embed = self.generate_embed("keys")
         await ctx.send(embed=embed)
 
-    @cog_ext.cog_slash(name="keys", description="How to dump prod.keys file.")
-    async def explain_keys(self, ctx: SlashContext):
-        embed = Embed(
-            title=self.explanations["keys"]["title"],
-            description=self.explanations["keys"]["body_text"],
-            colour=self.ryujinx_blue,
-        )
-        await ctx.send(embed=embed)
-
-    @cog_ext.cog_slash(name="firmware", description="How to dump system firmware.")
-    async def explain_firmware(self, ctx: SlashContext):
-        embed = Embed(
-            title=self.explanations["firmware"]["title"],
-            description=self.explanations["firmware"]["body_text"],
-            colour=self.ryujinx_blue,
-        )
+    @cog_ext.cog_slash(name="firmware", description="How to get firmware for Ryujinx.")
+    async def send_embed_firmware(self, ctx: SlashContext):
+        embed = self.generate_embed("firmware")
         await ctx.send(embed=embed)
 
     @cog_ext.cog_slash(name="fifo", description="Explains what FIFO is.")
-    async def explain_fifo(self, ctx: SlashContext):
-        embed = Embed(
-            title=self.explanations["fifo"]["title"],
-            description=self.explanations["fifo"]["body_text"],
-            colour=self.ryujinx_blue,
-        )
+    async def send_embed_fifo(self, ctx: SlashContext):
+        embed = self.generate_embed("fifo")
         await ctx.send(embed=embed)
 
     @cog_ext.cog_slash(
-        name="logging_defaults",
-        description="Shows what the default logging settings are.",
+        name="default_logs", description="The default Ryujinx logging settings."
     )
-    async def default_logs(self, ctx: SlashContext):
-        embed = Embed(
-            title=self.explanations["default_logs"]["title"],
-            description=self.explanations["default_logs"]["body_text"],
-            colour=self.ryujinx_blue,
-        )
+    async def send_embed_default_logs(self, ctx: SlashContext):
+        embed = self.generate_embed("default_logs")
         embed.set_image(url=self.explanations["default_logs"]["image"])
-        await ctx.send(embed=embed)
-
-    @cog_ext.cog_slash(name="test", description="A simple test command.")
-    async def test(self, ctx: SlashContext):
-        embed = Embed(
-            title="Test",
-            description="For testing only",
-            colour=self.ryujinx_blue,
-        )
         await ctx.send(embed=embed)
 
 
