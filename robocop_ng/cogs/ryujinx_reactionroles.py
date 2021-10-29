@@ -33,7 +33,7 @@ class RyujinxReactionRoles(Cog):
 
         self.get_role = lambda emoji_name: discord.utils.get(
             self.bot.guilds[0].roles,
-            name=self.emoji_map[str(emoji_name)],
+            name=self.emoji_map.get(str(emoji_name)),
         )
 
     async def generate_embed(self):
@@ -41,11 +41,11 @@ class RyujinxReactionRoles(Cog):
         description = "*React to this message with the emojis given below to get your 'Looking for LDN game' roles.* \n\n"
 
         for x in emojis:
-            if self.emoji_map[x] == "Testers":
-                description += f'\nReact {x} to get the "{self.emoji_map[x]}" role.'
+            if self.emoji_map.get(x) == "Testers":
+                description += f'\nReact {x} to get the "{self.emoji_map.get(x)}" role.'
             else:
                 description += (
-                    f"{x} for _{self.emoji_map[x].split('(')[1].split(')')[0]}_ \n"
+                    f"{x} for _{self.emoji_map.get(x).split('(')[1].split(')')[0]}_ \n"
                 )
 
         embed = discord.Embed(
@@ -135,7 +135,7 @@ class RyujinxReactionRoles(Cog):
     @Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         if payload.message_id == self.msg_id:
-            if self.emoji_map[str(payload.emoji.name)]:
+            if self.emoji_map.get(str(payload.emoji.name)) is not None:
 
                 guild = discord.utils.find(
                     lambda guild: guild.id == payload.guild_id, self.bot.guilds
