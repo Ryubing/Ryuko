@@ -18,7 +18,6 @@ class RyujinxReactionRoles(Cog):
             "👹": "Looking for LDN game (Monster Hunter Generations Ultimate)",
             "👺": "Looking for LDN game (Monster Hunter Rise)",
             "🧩": "Looking for LDN game (Mario Party Superstars)",
-            "🧩": "Looking for LDN game (Mario Party Superstars)",
             "🐉": "Looking for LDN game (Pokémon Sword/Shield)",
             "⚔️": "Looking for LDN game (Super Smash Bros. Ultimate)",
             "🏎️": "Looking for LDN game (Mario Kart 8)",
@@ -41,18 +40,18 @@ class RyujinxReactionRoles(Cog):
 
     async def generate_embed(self):
         emojis = list(self.emoji_map.keys())
-        description = "*React to this message with the emojis given below to get your 'Looking for LDN game' roles.* \n\n"
+        description = "React to this message with the emojis given below to get your 'Looking for LDN game' roles. \n\n"
 
         for x in emojis:
             if self.emoji_map.get(x) == "Testers":
                 description += f'\nReact {x} to get the "{self.emoji_map.get(x)}" role.'
             else:
                 description += (
-                    f"{x} for _{self.emoji_map.get(x).split('(')[1].split(')')[0]}_ \n"
+                    f"{x} for __{self.emoji_map.get(x).split('(')[1].split(')')[0]}__ \n"
                 )
 
         embed = discord.Embed(
-            title="**Select your roles**", description=description, color=27491
+            title="**Select your roles**", description=description, color=420420
         )
         embed.set_footer(
             text="To remove a role, simply remove the corresponding reaction."
