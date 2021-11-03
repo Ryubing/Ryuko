@@ -34,21 +34,21 @@ class Explainer(Cog):
             },
             "support": {
                 "body_text": f"""Please use <#{config.bot_log_allowed_channels["support"]}>, <#{config.bot_log_allowed_channels['patreon-support']}> or <#{config.bot_log_allowed_channels['linux-master-race']}> channels to get help.
-                                The easiest way to get help is to post a log file, since that will have information on your specs and hardware:
+                                The easiest way to get help is to post a log file, since that will have information on your hardware specs and any common errors in your configuration.
                                 \nLog files are saved in are saved in the `Logs` folder.
                                 Access this by doing `File > Open Log Folder` in Ryujinx, or by going to the folder directly where your `Ryujinx.exe` (Windows) or `Ryujinx` binary (Linux) is located.
-                                The last 3 logs from the last 3 boots of Ryujinx will be available. For support purposes, you'll usually want to drag and drop the largest one into Discord.
+                                The last 3 logs from the last 3 boots of Ryujinx will be available. For support purposes, you'll usually want to upload the largest one into Discord.
                                 \nIf you are unable to provide a log file, please provide your basic specs including: Ryujinx version, CPU model, GPU model and RAM amount, as well as **the name of the game and the version of the game you're having issues with (as well as any mods being used).**
                                 \n**Please be patient. Someone will help if you if they can and are available, but please also be mindful of people's time.**""",
                 "title": "Getting support for Ryujinx",
             },
             "keys": {
-                "body_text": """Prod.keys are the decryption keys that allow the emulator to run commercial software. Each key is **unique to a console**, you must dump it from the device that you've bought since you only have a licence to that specific device.
+                "body_text": """The `prod.keys` file contains the decryption keys that allow the emulator to run commercial software. Each key is **unique to a console**, you must dump it from the device that you've bought since you only have a license to that specific device.
                                 \nTo dump keys and firmware from your Switch, follow this guide: https://nh-server.github.io/switch-guide/user_guide/sysnand/making_essential_backups/""",
                 "title": "Prod.keys & dumping explained",
             },
             "firmware": {
-                "body_text": """Firmware files contain the Switch OS (codenamed Horizon) as well as some small apps like the Home menu and the Mii applet. Occasionally some games may require a firmware upgrade in order to be playable.
+                "body_text": """Firmware files contain the Switch OS (codenamed Horizon) as well as some small apps like the Home menu and the Mii applet. Occasionally some games may require a Switch firmware upgrade in order to be playable.
                                 \nTo dump keys and firmware from your Switch, follow this guide: https://nh-server.github.io/switch-guide/user_guide/sysnand/making_essential_backups/""",
                 "title": "Firmware dumping explained",
             },
@@ -59,20 +59,31 @@ class Explainer(Cog):
                 "title": "FIFO explained",
             },
             "default_logs": {
-                "body_text": "Your default logging settings should look like the following screenshot:",
+                "body_text": """Your default logging settings should have the following enabled:
+                             \n`Logging to File`, `Stub Logs`, `Info Logs`, `Warning Logs`, `Error Logs` and `Guest Logs`.
+                             \nRefer to the following screenshot:""",
                 "image": "https://media.discordapp.net/attachments/410208610455519243/897471975570702336/unknown.png?width=582&height=609",
                 "title": "Default Ryujinx logging settings",
             },
+            "emulation_explain": {
+                "body_text": """Games are programmed to work with specific hardware, which requires translating into something compatible with your PC. This process has to be done in real time as the emulated software is running, adding significant CPU overhead.
+                            \nIt also often requires emulation of the hardware, so software is used to make a virtual version of the console. This is also very resource intensive (again, mostly on the CPU side).
+                            \nNative PC games are optimized to run on modern processors with modern languages and architectures, so there are no performance overheads due to translation.
+                            """,
+                "title": "Emulation vs native games",
+            },
         }
 
-    def generate_embed(self, name, image=None):
+    def generate_embed(self, name):
         return Embed(
             title=self.explanations[name]["title"],
             description=self.explanations[name]["body_text"],
             colour=self.ryujinx_blue,
         )
 
-    @cog_ext.cog_slash(name="logs", description="How to get Ryujinx log files.")
+    @cog_ext.cog_slash(
+        name="logs", description="Explains how to get Ryujinx log files."
+    )
     async def send_embed_logs(self, ctx: SlashContext):
         embed = self.generate_embed("logs")
         await ctx.send(embed=embed)
@@ -115,6 +126,14 @@ class Explainer(Cog):
     async def send_embed_default_logs(self, ctx: SlashContext):
         embed = self.generate_embed("default_logs")
         embed.set_image(url=self.explanations["default_logs"]["image"])
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(
+        name="emulation_explain",
+        description="Explains why emulation is different from native gaming.",
+    )
+    async def send_embed_fifo(self, ctx: SlashContext):
+        embed = self.generate_embed("emulation_explain")
         await ctx.send(embed=embed)
 
 
