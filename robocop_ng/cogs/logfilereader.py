@@ -3,7 +3,7 @@ import re
 
 import aiohttp
 import config
-import discord
+from discord import Colour, Embed
 from discord.ext.commands import Cog
 
 logging.basicConfig(
@@ -17,7 +17,8 @@ class LogFileReader(Cog):
         self.bot = bot
         # Allows log analysis in #support and #patreon-support channels respectively
         self.bot_log_allowed_channels = config.bot_log_allowed_channels
-        self.uploaded_log_filenames = []
+        self.ryujinx_blue = Colour(0x4A90E2)
+        self.uploaded_log_info = []
 
     async def download_file(self, log_url):
         async with aiohttp.ClientSession() as session:
@@ -174,9 +175,7 @@ class LogFileReader(Cog):
                 )
             )
 
-            log_embed = discord.Embed(
-                title=f"{cleaned_game_name}", colour=discord.Colour(0x4A90E2)
-            )
+            log_embed = Embed(title=f"{cleaned_game_name}", colour=self.ryujinx_blue)
             log_embed.set_footer(text=f"Log uploaded by {author_name}")
             log_embed.add_field(
                 name="General Info",
@@ -193,10 +192,13 @@ class LogFileReader(Cog):
                 value=graphics_settings_info,
                 inline=True,
             )
-            if cleaned_game_name == "Unknown":
+            if (
+                cleaned_game_name == "Unknown"
+                and self.embed["game_info"]["errors"] == "No errors found in log"
+            ):
                 log_embed.add_field(
                     name="Empty Log",
-                    value=f"""This log file appears to be empty. To get a proper log, follow these steps:
+                    value=f"""The log file appears to be empty. To get a proper log, follow these steps:
                                 1) In Logging settings, ensure `Enable Logging to File` is checked.
                                 2) Ensure the following default logs are enabled: `Info`, `Warning`, `Error`, `Guest` and `Stub`.
                                 3) Start a game up.
@@ -204,9 +206,23 @@ class LogFileReader(Cog):
                                 5) Upload the latest log file.""",
                     inline=False,
                 )
+            if (
+                cleaned_game_name == "Unknown"
+                and self.embed["game_info"]["errors"] != "No errors found in log"
+            ):
                 log_embed.add_field(
                     name="Latest Error Snippet",
                     value=self.embed["game_info"]["errors"],
+                    inline=False,
+                )
+                log_embed.add_field(
+                    name="No Game Boot Detected",
+                    value=f"""No game boot has been detected in log file. To get a proper log, follow these steps:
+                                1) In Logging settings, ensure `Enable Logging to File` is checked.
+                                2) Ensure the following default logs are enabled: `Info`, `Warning`, `Error`, `Guest` and `Stub`.
+                                3) Start a game up.
+                                4) Play until your issue occurs.
+                                5) Upload the latest log file.""",
                     inline=False,
                 )
             else:
@@ -309,16 +325,6 @@ class LogFileReader(Cog):
                             f"Settings exception: {setting_name}: {type(error).__name__}"
                         )
                         continue
-                # Game name parsed last so that user settings are visible with empty log
-                self.embed["game_info"]["game_name"] = (
-                    re.search(
-                        r"Loader LoadNca: Application Loaded:\s([^;\n\r]*)",
-                        log_file,
-                        re.MULTILINE,
-                    )
-                    .group(1)
-                    .rstrip()
-                )
 
                 def analyse_error_message(log_file=log_file):
                     try:
@@ -351,6 +357,7 @@ class LogFileReader(Cog):
                                 "System.IO.InvalidDataException: End of Central Directory record could not be found",
                             ]
                         )
+                        update_keys_error = error_search(["LibHac.MissingKeyException"])
                         last_errors = "\n".join(
                             errors[-1][:2] if "|E|" in errors[-1][0] else ""
                         )
@@ -361,6 +368,7 @@ class LogFileReader(Cog):
                         shader_cache_collision,
                         dump_hash_warning,
                         shader_cache_corruption,
+                        update_keys_error,
                     )
 
                 # Finds the lastest error denoted by |E| in the log and its first line
@@ -370,6 +378,7 @@ class LogFileReader(Cog):
                     shader_cache_warn,
                     dump_hash_warning,
                     shader_cache_corruption_warn,
+                    update_keys_error,
                 ) = analyse_error_message()
                 if last_error_snippet:
                     self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
@@ -402,6 +411,12 @@ class LogFileReader(Cog):
                 if dump_hash_warning:
                     dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad game/firmware dump issues"
                     self.embed["game_info"]["notes"].append(dump_hash_warning)
+
+                if update_keys_error:
+                    update_keys_error = (
+                        f"⚠️ Keys or firmware out of date, consider updating them."
+                    )
+                    self.embed["game_info"]["notes"].append(update_keys_error)
 
                 timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
                 latest_timestamp = re.findall(timestamp_regex, log_file)[-1]
@@ -585,11 +600,13 @@ class LogFileReader(Cog):
         if message.author.bot:
             return
         try:
+            author_id = message.author.id
             author_mention = message.author.mention
             filename = message.attachments[0].filename
             # Any message over 2000 chars is uploaded as message.txt, so this is accounted for
             ryujinx_log_file_regex = re.compile(r"^Ryujinx_.*\.log|message\.txt$")
             log_file = re.compile(r"^.*\.log|.*\.txt$")
+            log_file_link = message.jump_url
             is_ryujinx_log_file = re.match(ryujinx_log_file_regex, filename)
             is_log_file = re.match(log_file, filename)
 
@@ -597,23 +614,37 @@ class LogFileReader(Cog):
                 message.channel.id in self.bot_log_allowed_channels.values()
                 and is_ryujinx_log_file
             ):
-                if filename not in self.uploaded_log_filenames:
+                uploaded_logs_exist = [
+                    True for elem in self.uploaded_log_info if filename in elem.values()
+                ]
+                if not any(uploaded_logs_exist):
+                    # if filename not in self.uploaded_log_info:
                     reply_message = await message.channel.send(
                         "Log detected, parsing..."
                     )
                     try:
                         embed = await self.log_file_read(message)
                         if "Ryujinx_" in filename:
-                            self.uploaded_log_filenames.append(filename)
+                            self.uploaded_log_info.append(
+                                {
+                                    "filename": filename,
+                                    "link": log_file_link,
+                                    "author": author_id,
+                                }
+                            )
                             # Avoid duplicate log file analysis, at least temporarily; keep track of the last few filenames of uploaded logs
                             # this should help support channels not be flooded with too many log files
                             # fmt: off
-                            self.uploaded_log_filenames = self.uploaded_log_filenames[-5:]
+                            self.uploaded_log_info = self.uploaded_log_info[-5:]
                             # fmt: on
                         return await reply_message.edit(content=None, embed=embed)
                     except UnicodeDecodeError:
                         return await message.channel.send(
-                            f"This log file appears to be invalid {author_mention}. Please re-check and re-upload your log file."
+                            content=author_mention,
+                            embed=Embed(
+                                description=f"This log file appears to be invalid. Please re-check and re-upload your log file.",
+                                colour=self.ryujinx_blue,
+                            ),
                         )
                     except Exception as error:
                         await reply_message.edit(
@@ -621,8 +652,21 @@ class LogFileReader(Cog):
                         )
                         print(logging.warn(error))
                 else:
+                    duplicate_log_file = next(
+                        (
+                            elem
+                            for elem in self.uploaded_log_info
+                            if elem["filename"] == filename
+                            and elem["author"] == author_id
+                        ),
+                        None,
+                    )
                     await message.channel.send(
-                        f"The log file `{filename}` appears to be a duplicate {author_mention}. Please upload a more recent file."
+                        content=author_mention,
+                        embed=Embed(
+                            description=f"The log file `{filename}` appears to be a duplicate [already uploaded here]({duplicate_log_file['link']}). Please upload a more recent file.",
+                            colour=self.ryujinx_blue,
+                        ),
                     )
             elif (
                 is_log_file
@@ -630,23 +674,31 @@ class LogFileReader(Cog):
                 and message.channel.id in self.bot_log_allowed_channels.values()
             ):
                 return await message.channel.send(
-                    f"{author_mention} Your file does not match the Ryujinx log format. Please check your file."
+                    content=author_mention,
+                    embed=Embed(
+                        description=f"Your file does not match the Ryujinx log format. Please check your file.",
+                        colour=self.ryujinx_blue,
+                    ),
                 )
             elif (
                 is_log_file
                 and not message.channel.id in self.bot_log_allowed_channels.values()
             ):
                 return await message.author.send(
-                    "\n".join(
-                        (
-                            f"{author_mention} Please upload Ryujinx log files to the correct location:\n",
-                            f'<#{config.bot_log_allowed_channels["support"]}>: General help and troubleshooting',
-                            f'<#{config.bot_log_allowed_channels["patreon-support"]}>: Help and troubleshooting for Patreon subscribers',
-                            f'<#{config.bot_log_allowed_channels["development"]}>: Ryujinx development discussion',
-                            f'<#{config.bot_log_allowed_channels["pr-testing"]}>: Discussion of in-progress pull request builds',
-                            f'<#{config.bot_log_allowed_channels["linux-master-race"]}>: Linux support and discussion',
-                        )
-                    )
+                    content=author_mention,
+                    embed=Embed(
+                        description="\n".join(
+                            (
+                                f"Please upload Ryujinx log files to the correct location:\n",
+                                f'<#{config.bot_log_allowed_channels["support"]}>: General help and troubleshooting',
+                                f'<#{config.bot_log_allowed_channels["patreon-support"]}>: Help and troubleshooting for Patreon subscribers',
+                                f'<#{config.bot_log_allowed_channels["development"]}>: Ryujinx development discussion',
+                                f'<#{config.bot_log_allowed_channels["pr-testing"]}>: Discussion of in-progress pull request builds',
+                                f'<#{config.bot_log_allowed_channels["linux-master-race"]}>: Linux support and discussion',
+                            )
+                        ),
+                        colour=self.ryujinx_blue,
+                    ),
                 )
         except IndexError:
             pass
