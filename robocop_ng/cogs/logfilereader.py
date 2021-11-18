@@ -235,15 +235,15 @@ class LogFileReader(Cog):
                     name="Mods", value=self.embed["game_info"]["mods"], inline=False
                 )
 
-            try:
-                notes_value = "\n".join(game_notes)
-            except TypeError:
-                notes_value = "Nothing to note"
-            log_embed.add_field(
-                name="Notes",
-                value=notes_value,
-                inline=False,
-            )
+                try:
+                    notes_value = "\n".join(game_notes)
+                except TypeError:
+                    notes_value = "Nothing to note"
+                log_embed.add_field(
+                    name="Notes",
+                    value=notes_value,
+                    inline=False,
+                )
 
             return log_embed
 
@@ -349,7 +349,12 @@ class LogFileReader(Cog):
                             return False
 
                         shader_cache_collision = error_search(["Cache collision found"])
-                        dump_hash_warning = error_search(["ResultFsInvalidIvfcHash"])
+                        dump_hash_warning = error_search(
+                            [
+                                "ResultFsInvalidIvfcHash",
+                                "ResultFsNonRealDataVerificationFailed",
+                            ]
+                        )
                         shader_cache_corruption = error_search(
                             [
                                 """Object reference not set to an instance of an object.
@@ -414,7 +419,7 @@ class LogFileReader(Cog):
 
                 if update_keys_error:
                     update_keys_error = (
-                        f"⚠️ Keys or firmware out of date, consider updating them."
+                        f"⚠️ Keys or firmware out of date, consider updating them"
                     )
                     self.embed["game_info"]["notes"].append(update_keys_error)
 
@@ -542,6 +547,10 @@ class LogFileReader(Cog):
                         ignore_missing_services_warning
                     )
 
+                if self.embed["settings"]["vsync"] == "Disabled":
+                    vsync_warning = f"⚠️ V-Sync disabled can cause instability like games running faster than intended or longer load times"
+                    self.embed["game_info"]["notes"].append(vsync_warning)
+
                 mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
                 pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
                 ldn_version = re.compile(r"^\d\.\d\.\d\-ldn\d\.\d$")
@@ -648,7 +657,7 @@ class LogFileReader(Cog):
                         )
                     except Exception as error:
                         await reply_message.edit(
-                            content=f"Error: Couldn't parse log; parser threw {type(error).__name__} exception."
+                            content=f"Error: Couldn't parse log; parser threw `{type(error).__name__}` exception."
                         )
                         print(logging.warn(error))
                 else:
