@@ -442,7 +442,6 @@ class LogFileReader(Cog):
                         ]
                         return mods_status
 
-                # Find information on installed mods
                 game_mods = mods_information()
                 if game_mods:
                     self.embed["game_info"]["mods"] = "\n".join(game_mods)
@@ -457,9 +456,14 @@ class LogFileReader(Cog):
                     # also maintains the list order
                     input_status = list(dict.fromkeys(input_status))
                     input_string = "\n".join(input_status)
-                else:
+                    self.embed["game_info"]["notes"].append(input_string)
+                # If emulator crashes on startup without game load, there is no need to show controller notification at all
+                if (
+                    not controllers
+                    and self.embed["game_info"]["game_name"] != "Unknown"
+                ):
                     input_string = "⚠️ No controller information found"
-                self.embed["game_info"]["notes"].append(input_string)
+                    self.embed["game_info"]["notes"].append(input_string)
 
                 try:
                     ram_available_regex = re.compile(r"Available\s(\d+)(?=\sMB)")
