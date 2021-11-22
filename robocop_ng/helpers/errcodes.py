@@ -687,11 +687,12 @@ switch_known_errcodes = {
     0x320002: "Error: Permission denied. ",
     0x327202: "Error: Close files opened in write mode before committing. ",
     0x328202: "Error: Specified user doesn't exist. ",
-    0x346402: "Error: Enough journal space is not left. ",
+    0x346402: "Error: Enough journal space is not left. ",0x4A2
     0x346A02: "Error: The open count of files and directories reached the limitation. ",
     0x353602: "Error: Save data extension count reached the limitation. ",
     0x35F202: "Error: Specified mount name is not found. ",
     # Fatal
+    0x2A2: "An internal assert occured within the application, application aborted.",
     0x4A2: "Can be triggered by running svcBreak. The svcBreak params have no affect on the value of the thrown error-code.",
     0xA8: "Userland ARM undefined instruction exception",
     0x2A8: "Userland ARM prefetch-abort due to PC set to non-executable region",
