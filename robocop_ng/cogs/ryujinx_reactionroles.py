@@ -21,7 +21,7 @@ class RyujinxReactionRoles(Cog):
             "🐉": "Looking for LDN game (Pokémon Sword/Shield)",
             "⚔️": "Looking for LDN game (Super Smash Bros. Ultimate)",
             "🏎️": "Looking for LDN game (Mario Kart 8)",
-            "🪨": "Pokémon Brilliant Diamond/Shining Pearl",
+            "🪨": "Looking for LDN game (Pokémon Brilliant Diamond/Shining Pearl)",
             "🍃": "Looking for LDN game (Animal Crossing: New Horizons)",
             "➡": "Looking for LDN game (Others)",
             "🚩": "Testers",
