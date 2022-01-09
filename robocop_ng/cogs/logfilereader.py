@@ -15,7 +15,6 @@ logging.basicConfig(
 class LogFileReader(Cog):
     def __init__(self, bot):
         self.bot = bot
-        # Allows log analysis in #support and #patreon-support channels respectively
         self.bot_log_allowed_channels = config.bot_log_allowed_channels
         self.ryujinx_blue = Colour(0x4A90E2)
         self.uploaded_log_info = []
@@ -357,9 +356,9 @@ class LogFileReader(Cog):
                         )
                         shader_cache_corruption = error_search(
                             [
-                                """Object reference not set to an instance of an object.
-                                                                at Ryujinx.Graphics.Gpu.Shader.ShaderCache.Initialize()""",
+                                "Ryujinx.Graphics.Gpu.Shader.ShaderCache.Initialize()",
                                 "System.IO.InvalidDataException: End of Central Directory record could not be found",
+                                "ICSharpCode.SharpZipLib.Zip.ZipException: Cannot find central directory",
                             ]
                         )
                         update_keys_error = error_search(["LibHac.MissingKeyException"])
@@ -488,7 +487,6 @@ class LogFileReader(Cog):
                         intel_gpu_warning = "**⚠️ Intel iGPUs are known to have driver issues, consider using a discrete GPU**"
                         self.embed["game_info"]["notes"].append(intel_gpu_warning)
                 try:
-                    # Find information on logs, whether defaults are enabled or not
                     default_logs = ["Info", "Warning", "Error", "Guest", "Stub"]
                     user_logs = (
                         self.embed["emu_info"]["logs_enabled"]
@@ -631,7 +629,6 @@ class LogFileReader(Cog):
                     True for elem in self.uploaded_log_info if filename in elem.values()
                 ]
                 if not any(uploaded_logs_exist):
-                    # if filename not in self.uploaded_log_info:
                     reply_message = await message.channel.send(
                         "Log detected, parsing..."
                     )
