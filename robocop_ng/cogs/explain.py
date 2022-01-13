@@ -72,6 +72,15 @@ class Explainer(Cog):
                             """,
                 "title": "Emulation vs native games",
             },
+            "amiibo": {
+                "body_text": """Amiibo data is pulled from AmiiboAPI, so no dumping is needed. To use them in-game:
+                \n1) Go to a section in the game where an Amiibo is requested, usually shown by an icon and a message screen asking to scan an Amiibo.
+                \n2) In Ryujinx, select Tools > Scan an Amiibo.
+                \n3) Choose the Amiibo you want to scan in.
+                \n4) The game should recognize the Amiibo and you should see the effects as though you just scanned a real Amiibo figure.""",
+                "image": "https://cdn.gamer-network.net/2020/usgamer/Animal-Crossing-New-Horizons-Photopia-Amiibo.jpg",
+                "title": "Amiibos explained",
+            },
         }
 
     def generate_embed(self, name):
@@ -106,7 +115,7 @@ class Explainer(Cog):
         await ctx.send(embed=embed)
 
     @cog_ext.cog_slash(name="keys", description="How to get keys for Ryujinx.")
-    async def send_embed_support(self, ctx: SlashContext):
+    async def send_embed_keys(self, ctx: SlashContext):
         embed = self.generate_embed("keys")
         await ctx.send(embed=embed)
 
@@ -132,8 +141,14 @@ class Explainer(Cog):
         name="emulation_explain",
         description="Explains why emulation is different from native gaming.",
     )
-    async def send_embed_fifo(self, ctx: SlashContext):
+    async def send_embed_emulation(self, ctx: SlashContext):
         embed = self.generate_embed("emulation_explain")
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(name="amiibo", description="How to use Amiibos in Ryujinx.")
+    async def send_embed_amiibo(self, ctx: SlashContext):
+        embed = self.generate_embed("amiibos")
+        embed.set_image(url=self.explanations["amiibo"]["image"])
         await ctx.send(embed=embed)
 
 
