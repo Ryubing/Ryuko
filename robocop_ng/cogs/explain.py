@@ -81,6 +81,13 @@ class Explainer(Cog):
                 "image": "https://cdn.gamer-network.net/2020/usgamer/Animal-Crossing-New-Horizons-Photopia-Amiibo.jpg",
                 "title": "Amiibos explained",
             },
+            "docked_handheld_mode": {
+                "body_text": """The Switch has two modes of operation: docked and handheld. Ryujinx can switch between these two.
+                                \nDocked mode: The Switch GPU operates at a higher capacity since it does not have to worry about running off the battery.
+                                This means games run at a higher resolution (1080p native) with some games having extra effects like higher draw distances or more anti-aliasing. This mode is slightly harder to emulate and requires more CPU power.
+                                \n\nHandheld mode: The Switch console downclocks its GPU to save on battery. In this mode games run at 720p native resolution. In terms of emulation, those with underpowered hardware may benefit from this mode as it tends to be comparatively less intensive.""",
+                "title": "Docked vs. Handheld mode",
+            },
         }
 
     def generate_embed(self, name):
@@ -149,6 +156,14 @@ class Explainer(Cog):
     async def send_embed_amiibo(self, ctx: SlashContext):
         embed = self.generate_embed("amiibos")
         embed.set_image(url=self.explanations["amiibo"]["image"])
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(
+        name="docked_vs_handheld",
+        description="Explains difference between docked and handheld modes.",
+    )
+    async def send_embed_emulation(self, ctx: SlashContext):
+        embed = self.generate_embed("docked_handheld_mode")
         await ctx.send(embed=embed)
 
 
