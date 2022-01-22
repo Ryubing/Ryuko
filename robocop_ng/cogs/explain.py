@@ -117,7 +117,13 @@ class Explainer(Cog):
                 "body_text": """Warnings will be issued for violations of the rules, for consistently skirting the rules/attempting to find loopholes for rule breaking, or for disregarding or protesting direction from Staff/Admins.\n
                                 - Three warnings will result in a kick.
                                 - The 4th warning will result in a ban.
-                                - Attempting to evade or mitigate disciplinary action by leaving the server, using alts, etc. will result in an immediate ban."""
+                                - Attempting to evade or mitigate disciplinary action by leaving the server, using alts, etc. will result in an immediate ban.""",
+                "title": "Rule #6",
+            },
+            "mac_os": {
+                "body_text": """MacOS builds are currently not supported in Ryujinx. This is due to Apple using the Metal graphics backend and not supporting OpenGL or Vulkan backends.
+                                Currently this is a very low priority and may only arrive in the far future.""",
+                "title": "macOS compatibility",
             },
         }
 
@@ -220,6 +226,13 @@ class Explainer(Cog):
     @cog_ext.cog_slash(name="r6", description="Explains how warnings work.")
     async def send_embed_warnings(self, ctx: SlashContext):
         embed = self.generate_embed("rule6")
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(
+        name="mac_os", description="Explains state of macOS compatibility."
+    )
+    async def send_embed_mac_os(self, ctx: SlashContext):
+        embed = self.generate_embed("mac_os")
         await ctx.send(embed=embed)
 
 
