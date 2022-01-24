@@ -553,7 +553,8 @@ class LogFileReader(Cog):
                     vsync_warning = f"⚠️ V-Sync disabled can cause instability like games running faster than intended or longer load times"
                     self.embed["game_info"]["notes"].append(vsync_warning)
 
-                mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
+                mainline_version = re.compile(r"^\d\.\d\.\d+$")
+                old_mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
                 pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
                 ldn_version = re.compile(r"^\d\.\d\.\d\-ldn\d\.\d$")
 
@@ -571,6 +572,9 @@ class LogFileReader(Cog):
                     if not (
                         re.match(
                             mainline_version, self.embed["emu_info"]["ryu_version"]
+                        )
+                        or re.match(
+                            old_mainline_version, self.embed["emu_info"]["ryu_version"]
                         )
                         or re.match(ldn_version, self.embed["emu_info"]["ryu_version"])
                         or re.match(pr_version, self.embed["emu_info"]["ryu_version"])
