@@ -586,6 +586,14 @@ class LogFileReader(Cog):
                         pr_version_warning = f"**⚠️ PR build logs should be posted in <#{config.bot_log_allowed_channels['pr-testing']}>**"
                         self.embed["game_info"]["notes"].append(pr_version_warning)
 
+                    if re.match(
+                        old_mainline_version, self.embed["emu_info"]["ryu_version"]
+                    ):
+                        old_mainline_version_warning = f"**🔴 Old Ryujinx version, please re-download from the Ryujinx website as auto-updates will not work on this version**"
+                        self.embed["game_info"]["notes"].append(
+                            old_mainline_version_warning
+                        )
+
                     if not (
                         re.match(
                             mainline_version, self.embed["emu_info"]["ryu_version"]
