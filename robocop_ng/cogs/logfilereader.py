@@ -361,7 +361,7 @@ class LogFileReader(Cog):
                                 "ICSharpCode.SharpZipLib.Zip.ZipException: Cannot find central directory",
                             ]
                         )
-                        update_keys_error = error_search(["LibHac.MissingKeyException"])
+                        update_keys_error = error_search(["MissingKeyException"])
                         file_permissions_error = error_search(
                             ["ResultFsPermissionDenied"]
                         )
