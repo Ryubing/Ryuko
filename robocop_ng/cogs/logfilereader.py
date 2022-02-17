@@ -49,6 +49,7 @@ class LogFileReader(Cog):
                 "audio_backend": "Unknown",
                 "docked": "Unknown",
                 "expand_ram": "Unknown",
+                "fs_integrity": "Unknown",
                 "ignore_missing_services": "Unknown",
                 "memory_manager": "Unknown",
                 "pptc": "Unknown",
@@ -308,6 +309,7 @@ class LogFileReader(Cog):
                         "audio_backend": "AudioBackend",
                         "docked": "EnableDockedMode",
                         "expand_ram": "ExpandRam",
+                        "fs_integrity": "EnableFsIntegrityChecks",
                         "ignore_missing_services": "IgnoreMissingServices",
                         "memory_manager": "MemoryManagerMode",
                         "pptc": "EnablePtc",
@@ -572,6 +574,10 @@ class LogFileReader(Cog):
                 if self.embed["settings"]["vsync"] == "Disabled":
                     vsync_warning = f"⚠️ V-Sync disabled can cause instability like games running faster than intended or longer load times"
                     self.embed["game_info"]["notes"].append(vsync_warning)
+
+                if self.embed["settings"]["fs_integrity"] == "Disabled":
+                    fs_integrity_warning = f"⚠️ Disabling file integrity checks may cause corrupted dumps to not be detected"
+                    self.embed["game_info"]["notes"].append(fs_integrity_warning)
 
                 mainline_version = re.compile(r"^\d\.\d\.\d+$")
                 old_mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
