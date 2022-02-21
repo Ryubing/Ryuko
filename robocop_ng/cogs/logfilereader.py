@@ -47,6 +47,7 @@ class LogFileReader(Cog):
             },
             "settings": {
                 "audio_backend": "Unknown",
+                "backend_threading": "Unknown",
                 "docked": "Unknown",
                 "expand_ram": "Unknown",
                 "fs_integrity": "Unknown",
@@ -307,6 +308,7 @@ class LogFileReader(Cog):
                         "anisotropic_filtering": "MaxAnisotropy",
                         "aspect_ratio": "AspectRatio",
                         "audio_backend": "AudioBackend",
+                        "backend_threading": "BackendThreading",
                         "docked": "EnableDockedMode",
                         "expand_ram": "ExpandRam",
                         "fs_integrity": "EnableFsIntegrityChecks",
@@ -368,6 +370,9 @@ class LogFileReader(Cog):
                             ["ResultFsPermissionDenied"]
                         )
                         file_not_found_error = error_search(["ResultFsTargetNotFound"])
+                        missing_services_error = error_search(
+                            ["ServiceNotImplementedException"]
+                        )
 
                         last_errors = "\n".join(
                             errors[-1][:2] if "|E|" in errors[-1][0] else ""
@@ -382,6 +387,7 @@ class LogFileReader(Cog):
                         update_keys_error,
                         file_permissions_error,
                         file_not_found_error,
+                        missing_services_error,
                     )
 
                 # Finds the lastest error denoted by |E| in the log and its first line
@@ -394,6 +400,7 @@ class LogFileReader(Cog):
                     update_keys_error,
                     file_permissions_error,
                     file_not_found_error,
+                    missing_services_error,
                 ) = analyse_error_message()
                 if last_error_snippet:
                     self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
@@ -440,6 +447,13 @@ class LogFileReader(Cog):
                 if file_not_found_error:
                     file_not_found_error = f"⚠️ Save not found error. Consider starting game without a save file or using a new save file"
                     self.embed["game_info"]["notes"].append(file_not_found_error)
+
+                if (
+                    missing_services_error
+                    and self.embed["settings"]["ignore_missing_services"] == "False"
+                ):
+                    missing_services_error = f"⚠️ Consider enabling `Ignore Missing Services` in Ryujinx settings"
+                    self.embed["game_info"]["notes"].append(missing_services_error)
 
                 timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
                 latest_timestamp = re.findall(timestamp_regex, log_file)[-1]
@@ -560,7 +574,7 @@ class LogFileReader(Cog):
                     self.embed["game_info"]["notes"].append(expand_ram_warning)
 
                 if self.embed["settings"]["memory_manager"] == "SoftwarePageTable":
-                    software_memory_manager_warning = "⚠️ `Software` setting in Memory Manager Mode will give slower performance than the default setting of `Host unchecked`"
+                    software_memory_manager_warning = "🔴 **`Software` setting in Memory Manager Mode will give slower performance than the default setting of `Host unchecked`**"
                     self.embed["game_info"]["notes"].append(
                         software_memory_manager_warning
                     )
@@ -578,6 +592,12 @@ class LogFileReader(Cog):
                 if self.embed["settings"]["fs_integrity"] == "Disabled":
                     fs_integrity_warning = f"⚠️ Disabling file integrity checks may cause corrupted dumps to not be detected"
                     self.embed["game_info"]["notes"].append(fs_integrity_warning)
+
+                if self.embed["settings"]["backend_threading"] == "Off":
+                    backend_threading_warning = (
+                        f"🔴 **Graphics Backend Multithreading should be set to `Auto`**"
+                    )
+                    self.embed["game_info"]["notes"].append(backend_threading_warning)
 
                 mainline_version = re.compile(r"^\d\.\d\.\d+$")
                 old_mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
