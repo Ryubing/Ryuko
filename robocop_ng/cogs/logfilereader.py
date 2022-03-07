@@ -110,7 +110,6 @@ class LogFileReader(Cog):
                     continue
 
         def get_ryujinx_info(log_file=log_file):
-            # try:
             for setting in self.embed["emu_info"]:
                 try:
                     if setting == "ryu_version":
@@ -324,7 +323,7 @@ class LogFileReader(Cog):
                             setting_name, setting_map[setting_name], log_file=log_file
                         )
                     except (AttributeError, IndexError) as error:
-                        print(
+                        logging.info(
                             f"Settings exception: {setting_name}: {type(error).__name__}"
                         )
                         continue
@@ -672,6 +671,7 @@ class LogFileReader(Cog):
             author_id = message.author.id
             author_mention = message.author.mention
             filename = message.attachments[0].filename
+            filesize = message.attachments[0].size
             # Any message over 2000 chars is uploaded as message.txt, so this is accounted for
             ryujinx_log_file_regex = re.compile(r"^Ryujinx_.*\.log|message\.txt$")
             log_file = re.compile(r"^.*\.log|.*\.txt$")
@@ -696,6 +696,7 @@ class LogFileReader(Cog):
                             self.uploaded_log_info.append(
                                 {
                                     "filename": filename,
+                                    "file_size": filesize,
                                     "link": log_file_link,
                                     "author": author_id,
                                 }
@@ -725,6 +726,7 @@ class LogFileReader(Cog):
                             elem
                             for elem in self.uploaded_log_info
                             if elem["filename"] == filename
+                            and elem["file_size"] == filesize
                             and elem["author"] == author_id
                         ),
                         None,
