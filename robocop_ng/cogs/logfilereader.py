@@ -235,15 +235,15 @@ class LogFileReader(Cog):
                     name="Mods", value=self.embed["game_info"]["mods"], inline=False
                 )
 
-                try:
-                    notes_value = "\n".join(game_notes)
-                except TypeError:
-                    notes_value = "Nothing to note"
-                log_embed.add_field(
-                    name="Notes",
-                    value=notes_value,
-                    inline=False,
-                )
+            try:
+                notes_value = "\n".join(game_notes)
+            except TypeError:
+                notes_value = "Nothing to note"
+            log_embed.add_field(
+                name="Notes",
+                value=notes_value,
+                inline=False,
+            )
 
             return log_embed
 
