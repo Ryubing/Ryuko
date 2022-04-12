@@ -673,7 +673,7 @@ switch_known_errcodes = {
     0x7D202: "Error: Specified partition is not found. ",
     0x7D402: "Error: Specified target is not found. ",
     0xFA002: "Error: Failed to access SD card. ",
-    0x136802: "Error: Failed to access game card. "
+    0x136802: "Error: Failed to access game card. ",
     0x177202: "Error: Specified operation is not implemented. ",
     0x177A02: "Error: Specified value is out of range. ",
     0x190002: "Error: Failed to allocate memory. ",

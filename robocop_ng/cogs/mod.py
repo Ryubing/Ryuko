@@ -242,6 +242,7 @@ class Mod(Cog):
     @commands.guild_only()
     @commands.bot_has_permissions(ban_members=True)
     @commands.check(check_if_staff)
+    @commands.command()
     async def bandel(
         self, ctx, day_count: int, target: discord.Member, *, reason: str = ""
     ):
