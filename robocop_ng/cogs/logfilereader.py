@@ -199,11 +199,11 @@ class LogFileReader(Cog):
                 log_embed.add_field(
                     name="Empty Log",
                     value=f"""The log file appears to be empty. To get a proper log, follow these steps:
-                                1) In Logging settings, ensure `Enable Logging to File` is checked.
-                                2) Ensure the following default logs are enabled: `Info`, `Warning`, `Error`, `Guest` and `Stub`.
-                                3) Start a game up.
-                                4) Play until your issue occurs.
-                                5) Upload the latest log file.""",
+1) In Logging settings, ensure `Enable Logging to File` is checked.
+2) Ensure the following default logs are enabled: `Info`, `Warning`, `Error`, `Guest` and `Stub`.
+3) Start a game up.
+4) Play until your issue occurs.
+5) Upload the latest log file which is larger than 2KB.""",
                     inline=False,
                 )
             if (
@@ -218,11 +218,11 @@ class LogFileReader(Cog):
                 log_embed.add_field(
                     name="No Game Boot Detected",
                     value=f"""No game boot has been detected in log file. To get a proper log, follow these steps:
-                                1) In Logging settings, ensure `Enable Logging to File` is checked.
-                                2) Ensure the following default logs are enabled: `Info`, `Warning`, `Error`, `Guest` and `Stub`.
-                                3) Start a game up.
-                                4) Play until your issue occurs.
-                                5) Upload the latest log file.""",
+1) In Logging settings, ensure `Enable Logging to File` is checked.
+2) Ensure the following default logs are enabled: `Info`, `Warning`, `Error`, `Guest` and `Stub`.
+3) Start a game up.
+4) Play until your issue occurs.
+5) Upload the latest log file which is larger than 2KB.""",
                     inline=False,
                 )
             else:
