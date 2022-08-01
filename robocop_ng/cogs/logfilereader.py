@@ -552,15 +552,6 @@ class LogFileReader(Cog):
                     firmware_warning = f"**❌ Nintendo Switch firmware not found**"
                     self.embed["game_info"]["notes"].append(firmware_warning)
 
-                if self.embed["settings"]["anisotropic_filtering"] not in [
-                    "Auto",
-                    "Unknown",
-                ]:
-                    anisotropic_filtering_warning = "⚠️ Anisotropic filtering not set to `Auto` can cause graphical issues"
-                    self.embed["game_info"]["notes"].append(
-                        anisotropic_filtering_warning
-                    )
-
                 if self.embed["settings"]["audio_backend"] == "Dummy":
                     dummy_warning = (
                         f"⚠️ Dummy audio backend, consider changing to SDL2 or OpenAL"
