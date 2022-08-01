@@ -514,13 +514,17 @@ class LogFileReader(Cog):
                     mac_os_warning = "**❌ macOS is currently unsupported**"
                     self.embed["game_info"]["notes"].append(mac_os_warning)
 
-                if "Intel" in self.embed["hardware_info"]["gpu"]:
-                    if (
-                        "Darwin" in self.embed["hardware_info"]["os"]
-                        or "Windows" in self.embed["hardware_info"]["os"]
-                    ):
-                        intel_gpu_warning = "**⚠️ Intel iGPUs are known to have driver issues, consider using a discrete GPU**"
+                if (
+                    "Windows" in self.embed["hardware_info"]["os"]
+                    and self.embed["settings"]["graphics_backend"] != "Vulkan"
+                ):
+                    if "Intel" in self.embed["hardware_info"]["gpu"]:
+                        intel_gpu_warning = "**⚠️ Intel iGPU users should consider using Vulkan graphics backend**"
                         self.embed["game_info"]["notes"].append(intel_gpu_warning)
+                    if "AMD" in self.embed["hardware_info"]["gpu"]:
+                        amd_gpu_warning = "**⚠️ AMD GPU users should consider using Vulkan graphics backend**"
+                        self.embed["game_info"]["notes"].append(amd_gpu_warning)
+
                 try:
                     default_logs = ["Info", "Warning", "Error", "Guest", "Stub"]
                     user_logs = (
