@@ -51,6 +51,7 @@ class LogFileReader(Cog):
                 "docked": "Unknown",
                 "expand_ram": "Unknown",
                 "fs_integrity": "Unknown",
+                "graphics_backend": "Unknown",
                 "ignore_missing_services": "Unknown",
                 "memory_manager": "Unknown",
                 "pptc": "Unknown",
@@ -154,14 +155,15 @@ class LogFileReader(Cog):
                 (
                     f"**Audio Backend:** `{self.embed['settings']['audio_backend']}`",
                     f"**Console Mode:** `{self.embed['settings']['docked']}`",
-                    f"**PPTC cache:** `{self.embed['settings']['pptc']}`",
-                    f"**Shader cache:** `{self.embed['settings']['shader_cache']}`",
+                    f"**PPTC Cache:** `{self.embed['settings']['pptc']}`",
+                    f"**Shader Cache:** `{self.embed['settings']['shader_cache']}`",
                     f"**V-Sync:** `{self.embed['settings']['vsync']}`",
                 )
             )
 
             graphics_settings_info = "\n".join(
                 (
+                    f"**Graphics Backend:** `{self.embed['settings']['graphics_backend']}`",
                     f"**Resolution:** `{self.embed['settings']['resolution_scale']}`",
                     f"**Anisotropic Filtering:** `{self.embed['settings']['anisotropic_filtering']}`",
                     f"**Aspect Ratio:** `{self.embed['settings']['aspect_ratio']}`",
@@ -311,6 +313,7 @@ class LogFileReader(Cog):
                         "docked": "EnableDockedMode",
                         "expand_ram": "ExpandRam",
                         "fs_integrity": "EnableFsIntegrityChecks",
+                        "graphics_backend": "GraphicsBackend",
                         "ignore_missing_services": "IgnoreMissingServices",
                         "memory_manager": "MemoryManagerMode",
                         "pptc": "EnablePtc",
