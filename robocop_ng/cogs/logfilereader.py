@@ -474,6 +474,8 @@ class LogFileReader(Cog):
                             f"ℹ️ {i['mod']} ({'ExeFS' if i['status'] == '[E]' else 'RomFS'})"
                             for i in mods
                         ]
+                        # Remove duplicated mods from output
+                        mods_status = list(dict.fromkeys(mods_status))
                         return mods_status
 
                 game_mods = mods_information()
