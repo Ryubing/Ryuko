@@ -392,7 +392,7 @@ class LogFileReader(Cog):
                         missing_services_error,
                     )
 
-                # Finds the lastest error denoted by |E| in the log and its first line
+                # Finds the latest error denoted by |E| in the log and its first line
                 # Also warns of common issues
                 (
                     last_error_snippet,
