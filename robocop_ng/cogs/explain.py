@@ -40,6 +40,7 @@ class Explainer(Cog):
                                 The last 3 logs from the last 3 boots of Ryujinx will be available. For support purposes, you'll usually want to upload the largest one into Discord.
                                 \nIf you are unable to provide a log file, please provide your basic specs including: Ryujinx version, CPU model, GPU model and RAM amount, as well as **the name of the game and the version of the game you're having issues with (as well as any mods being used).**
                                 \n**Please be patient. Someone will help if you if they can and are available, but please also be mindful of people's time.**""",
+                "image": "https://media.discordapp.net/attachments/410208610455519243/1010370840409415721/unknown.png",
                 "title": "Getting support for Ryujinx",
             },
             "keys": {
@@ -52,10 +53,15 @@ class Explainer(Cog):
                                 \nTo dump keys and firmware from your Switch, follow this guide: https://nh-server.github.io/switch-guide/user_guide/sysnand/making_essential_backups/""",
                 "title": "Firmware dumping explained",
             },
+            "games": {
+                "body_text": """A hacked Nintendo Switch is needed to dump games, which you can learn how to do here: https://nh-server.github.io/switch-guide/
+                                \nOnce you have hacked your Switch, you can dump your games to get an XCI or NSP file with this homebrew: https://github.com/DarkMatterCore/nxdumptool/releases""",
+                "title": """How to get games for Ryujinx""",
+            },
             "fifo": {
                 "body_text": """FIFO (First In First Out) refers to the command queue for the emulated GPU.
                             Your CPU does the work to emulate the Switch GPU commands, so the FIFO percentage shown is the time spent actively processing these instructions.
-                            A higher FIFO percentage is not strictly related to performance, you may have high framerates while also having high FIFO and vice versa. Generally a high FIFO _could_ sometimes indicate an emulated GPU bottleneck.""",
+                            A higher FIFO percentage is not strictly related to performance, you may have high frame rate while also having high FIFO and vice versa. Generally a high FIFO _could_ sometimes indicate an emulated GPU bottleneck.""",
                 "title": "FIFO explained",
             },
             "default_logs": {
@@ -125,6 +131,14 @@ class Explainer(Cog):
                                 Currently this is a very low priority and may only arrive in the far future.""",
                 "title": "macOS compatibility",
             },
+            "ldn": {
+                "body_text": """The LDN version of Ryujinx is a separate build that allows users to:
+                \n- Play LAN games with real Switch consoles (if the game supports it)
+                \n- Play Local Wireless game modes over the internet with other Ryujinx LDN users.
+                \n While it is hosted on Patreon, it is FREE for all users.
+                \n Find the download and guide here: https://github.com/Ryujinx/Ryujinx/wiki/Multiplayer-(LDN-Local-Wireless)-Guide""",
+                "title": "LDN explained",
+            },
         }
 
     def generate_embed(self, name):
@@ -166,6 +180,11 @@ class Explainer(Cog):
     @cog_ext.cog_slash(name="firmware", description="How to get firmware for Ryujinx.")
     async def send_embed_firmware(self, ctx: SlashContext):
         embed = self.generate_embed("firmware")
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(name="games", description="How to get games for Ryujinx.")
+    async def send_embed_games(self, ctx: SlashContext):
+        embed = self.generate_embed("games")
         await ctx.send(embed=embed)
 
     @cog_ext.cog_slash(name="fifo", description="Explains what FIFO is.")
@@ -233,6 +252,11 @@ class Explainer(Cog):
     )
     async def send_embed_mac_os(self, ctx: SlashContext):
         embed = self.generate_embed("mac_os")
+        await ctx.send(embed=embed)
+
+    @cog_ext.cog_slash(name="ldn", description="Explains what the LDN build is.")
+    async def send_embed_ldn(self, ctx: SlashContext):
+        embed = self.generate_embed("ldn")
         await ctx.send(embed=embed)
 
 
