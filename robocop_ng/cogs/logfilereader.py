@@ -460,7 +460,7 @@ class LogFileReader(Cog):
                 timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
                 latest_timestamp = re.findall(timestamp_regex, log_file)[-1]
                 if latest_timestamp:
-                    timestamp_message = f"ℹ️ Time elapsed in log: `{latest_timestamp}`"
+                    timestamp_message = f"ℹ️ Time elapsed: `{latest_timestamp}`"
                     self.embed["game_info"]["notes"].append(timestamp_message)
 
                 def mods_information(log_file=log_file):
