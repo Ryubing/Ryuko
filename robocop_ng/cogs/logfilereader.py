@@ -22,7 +22,7 @@ class LogFileReader(Cog):
     async def download_file(self, log_url):
         async with aiohttp.ClientSession() as session:
             # Grabs first and last few bytes of log file to prevent abuse from large files
-            headers = {"Range": "bytes=0-35000, -6000"}
+            headers = {"Range": "bytes=0-60000, -6000"}
             async with session.get(log_url, headers=headers) as response:
                 return await response.text("UTF-8")
 
