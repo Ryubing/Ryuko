@@ -60,6 +60,7 @@ class LogFileReader(Cog):
                 "resolution_scale": "Unknown",
                 "anisotropic_filtering": "Unknown",
                 "aspect_ratio": "Unknown",
+                "texture_recompression": "Unknown",
             },
         }
         attached_log = message.attachments[0]
@@ -167,6 +168,7 @@ class LogFileReader(Cog):
                     f"**Resolution:** `{self.embed['settings']['resolution_scale']}`",
                     f"**Anisotropic Filtering:** `{self.embed['settings']['anisotropic_filtering']}`",
                     f"**Aspect Ratio:** `{self.embed['settings']['aspect_ratio']}`",
+                    f"**Texture Recompression:** `{self.embed['settings']['texture_recompression']}`",
                 )
             )
 
@@ -298,6 +300,7 @@ class LogFileReader(Cog):
                             if name in [
                                 "pptc",
                                 "shader_cache",
+                                "texture_recompression",
                                 "vsync",
                             ]:
                                 setting[
@@ -319,6 +322,7 @@ class LogFileReader(Cog):
                         "pptc": "EnablePtc",
                         "resolution_scale": "ResScale",
                         "shader_cache": "EnableShaderCache",
+                        "texture_recompression": "EnableTextureRecompression",
                         "vsync": "EnableVsync",
                     }
                     try:
