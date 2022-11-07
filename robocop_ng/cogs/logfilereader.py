@@ -380,6 +380,9 @@ class LogFileReader(Cog):
                         missing_services_error = error_search(
                             ["ServiceNotImplementedException"]
                         )
+                        vulkan_out_of_memory_error = error_search(
+                            ["ErrorOutOfDeviceMemory"]
+                        )
 
                         last_errors = "\n".join(
                             errors[-1][:2] if "|E|" in errors[-1][0] else ""
@@ -395,6 +398,7 @@ class LogFileReader(Cog):
                         file_permissions_error,
                         file_not_found_error,
                         missing_services_error,
+                        vulkan_out_of_memory_error,
                     )
 
                 # Finds the latest error denoted by |E| in the log and its first line
@@ -408,6 +412,7 @@ class LogFileReader(Cog):
                     file_permissions_warn,
                     file_not_found_warn,
                     missing_services_warn,
+                    vulkan_out_of_memory_warn,
                 ) = analyse_error_message()
                 if last_error_snippet:
                     self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
@@ -461,6 +466,13 @@ class LogFileReader(Cog):
                 ):
                     missing_services_warn = f"⚠️ Consider enabling `Ignore Missing Services` in Ryujinx settings"
                     self.embed["game_info"]["notes"].append(missing_services_warn)
+
+                if (
+                    vulkan_out_of_memory_warn
+                    and self.embed["settings"]["texture_recompression"] == "Disabled"
+                ):
+                    vulkan_out_of_memory_warn = f"⚠️ Consider enabling `Texture Recompression` in Ryujinx settings"
+                    self.embed["game_info"]["notes"].append(vulkan_out_of_memory_warn)
 
                 timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
                 latest_timestamp = re.findall(timestamp_regex, log_file)[-1]
