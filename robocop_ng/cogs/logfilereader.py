@@ -2,9 +2,10 @@ import logging
 import re
 
 import aiohttp
-import config
 from discord import Colour, Embed
 from discord.ext.commands import Cog
+
+import config
 
 logging.basicConfig(
     format="%(asctime)s (%(levelname)s) %(message)s (Line %(lineno)d)",
@@ -358,7 +359,7 @@ class LogFileReader(Cog):
                             return False
 
                         shader_cache_collision = error_search(["Cache collision found"])
-                        dump_hash_warning = error_search(
+                        dump_hash_error = error_search(
                             [
                                 "ResultFsInvalidIvfcHash",
                                 "ResultFsNonRealDataVerificationFailed",
@@ -388,7 +389,7 @@ class LogFileReader(Cog):
                     return (
                         last_errors,
                         shader_cache_collision,
-                        dump_hash_warning,
+                        dump_hash_error,
                         shader_cache_corruption,
                         update_keys_error,
                         file_permissions_error,
@@ -403,10 +404,10 @@ class LogFileReader(Cog):
                     shader_cache_warn,
                     dump_hash_warning,
                     shader_cache_corruption_warn,
-                    update_keys_error,
-                    file_permissions_error,
-                    file_not_found_error,
-                    missing_services_error,
+                    update_keys_warn,
+                    file_permissions_warn,
+                    file_not_found_warn,
+                    missing_services_warn,
                 ) = analyse_error_message()
                 if last_error_snippet:
                     self.embed["game_info"]["errors"] = f"```{last_error_snippet}```"
@@ -440,26 +441,26 @@ class LogFileReader(Cog):
                     dump_hash_warning = f"⚠️ Dump error detected. Investigate possible bad game/firmware dump issues"
                     self.embed["game_info"]["notes"].append(dump_hash_warning)
 
-                if update_keys_error:
-                    update_keys_error = (
+                if update_keys_warn:
+                    update_keys_warn = (
                         f"⚠️ Keys or firmware out of date, consider updating them"
                     )
-                    self.embed["game_info"]["notes"].append(update_keys_error)
+                    self.embed["game_info"]["notes"].append(update_keys_warn)
 
-                if file_permissions_error:
-                    file_permissions_error = f"⚠️ File permission error. Consider deleting save directory and allowing Ryujinx to make a new one"
-                    self.embed["game_info"]["notes"].append(file_permissions_error)
+                if file_permissions_warn:
+                    file_permissions_warn = f"⚠️ File permission error. Consider deleting save directory and allowing Ryujinx to make a new one"
+                    self.embed["game_info"]["notes"].append(file_permissions_warn)
 
-                if file_not_found_error:
-                    file_not_found_error = f"⚠️ Save not found error. Consider starting game without a save file or using a new save file"
-                    self.embed["game_info"]["notes"].append(file_not_found_error)
+                if file_not_found_warn:
+                    file_not_found_warn = f"⚠️ Save not found error. Consider starting game without a save file or using a new save file"
+                    self.embed["game_info"]["notes"].append(file_not_found_warn)
 
                 if (
-                    missing_services_error
+                    missing_services_warn
                     and self.embed["settings"]["ignore_missing_services"] == "False"
                 ):
-                    missing_services_error = f"⚠️ Consider enabling `Ignore Missing Services` in Ryujinx settings"
-                    self.embed["game_info"]["notes"].append(missing_services_error)
+                    missing_services_warn = f"⚠️ Consider enabling `Ignore Missing Services` in Ryujinx settings"
+                    self.embed["game_info"]["notes"].append(missing_services_warn)
 
                 timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
                 latest_timestamp = re.findall(timestamp_regex, log_file)[-1]
