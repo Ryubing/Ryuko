@@ -588,7 +588,7 @@ class LogFileReader(Cog):
                     self.embed["game_info"]["notes"].append(shader_warning)
 
                 if self.embed["settings"]["expand_ram"] == "True":
-                    expand_ram_warning = f"⚠️ `Expand DRAM size to 6GB` should only be enabled for 4K mods"
+                    expand_ram_warning = f"⚠️ `Use alternative memory layout` should only be enabled for 4K mods"
                     self.embed["game_info"]["notes"].append(expand_ram_warning)
 
                 if self.embed["settings"]["memory_manager"] == "SoftwarePageTable":
