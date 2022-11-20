@@ -519,7 +519,9 @@ class LogFileReader(Cog):
                     self.embed["game_info"]["notes"].append(input_string)
 
                 try:
-                    ram_available_regex = re.compile(r"Available\s(\d+)(?=\sMB)")
+                    ram_available_regex = re.compile(
+                        r"Application\sPrint:\sRAM:(?:.*Available\s)(\d+)"
+                    )
                     ram_available = re.search(ram_available_regex, log_file)[1]
                     if int(ram_available) < 8000:
                         ram_warning = (
