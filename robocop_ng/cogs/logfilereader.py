@@ -620,7 +620,7 @@ class LogFileReader(Cog):
                 mainline_version = re.compile(r"^\d\.\d\.\d+$")
                 old_mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
                 pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
-                ldn_version = re.compile(r"^\d\.\d\.\d\-ldn\d\.\d$")
+                ldn_version = re.compile(r"^\d\.\d\.\d\-ldn\d+\.\d+(?:\.\d+|$)")
 
                 if (
                     message.channel.id == config.bot_log_allowed_channels["support"]
