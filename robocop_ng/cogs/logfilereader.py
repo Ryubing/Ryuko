@@ -617,6 +617,15 @@ class LogFileReader(Cog):
                 old_mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
                 pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
                 ldn_version = re.compile(r"^\d\.\d\.\d\-ldn\d+\.\d+(?:\.\d+|$)")
+                macos_version = re.compile(r"\d+\.\d+\.\d+\-macos\d+")
+
+                valid_ryujinx_regex = [
+                    mainline_version,
+                    old_mainline_version,
+                    pr_version,
+                    ldn_version,
+                    macos_version,
+                ]
 
                 is_channel_allowed = False
 
@@ -638,16 +647,9 @@ class LogFileReader(Cog):
                             old_mainline_version_warning
                         )
 
-                    if not (
-                        re.match(
-                            mainline_version, self.embed["emu_info"]["ryu_version"]
-                        )
-                        or re.match(
-                            old_mainline_version, self.embed["emu_info"]["ryu_version"]
-                        )
-                        or re.match(ldn_version, self.embed["emu_info"]["ryu_version"])
-                        or re.match(pr_version, self.embed["emu_info"]["ryu_version"])
-                        or re.match("Unknown", self.embed["emu_info"]["ryu_version"])
+                    if not any(
+                        re.match(pattern, self.embed["emu_info"]["ryu_version"])
+                        for pattern in valid_ryujinx_regex
                     ):
                         custom_build_warning = (
                             "**⚠️ Custom builds are not officially supported**"
