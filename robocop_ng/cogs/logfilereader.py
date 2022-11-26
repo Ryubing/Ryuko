@@ -531,10 +531,6 @@ class LogFileReader(Cog):
                 except TypeError:
                     pass
 
-                if "Darwin" in self.embed["hardware_info"]["os"]:
-                    mac_os_warning = "**❌ macOS is currently unsupported**"
-                    self.embed["game_info"]["notes"].append(mac_os_warning)
-
                 if (
                     "Windows" in self.embed["hardware_info"]["os"]
                     and self.embed["settings"]["graphics_backend"] != "Vulkan"
@@ -622,13 +618,14 @@ class LogFileReader(Cog):
                 pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
                 ldn_version = re.compile(r"^\d\.\d\.\d\-ldn\d+\.\d+(?:\.\d+|$)")
 
-                if (
-                    message.channel.id == config.bot_log_allowed_channels["support"]
-                    or message.channel.id
-                    == config.bot_log_allowed_channels["patreon-support"]
-                    or message.channel.id
-                    == config.bot_log_allowed_channels["linux-master-race"]
-                ):
+                is_channel_allowed = False
+
+                for allowed_channel_id in config.bot_log_allowed_channels.values():
+                    if message.channel.id == allowed_channel_id:
+                        is_channel_allowed = True
+                        break
+
+                if is_channel_allowed:
                     if re.match(pr_version, self.embed["emu_info"]["ryu_version"]):
                         pr_version_warning = f"**⚠️ PR build logs should be posted in <#{config.bot_log_allowed_channels['pr-testing']}> if reporting bugs or tests**"
                         self.embed["game_info"]["notes"].append(pr_version_warning)
@@ -779,7 +776,9 @@ class LogFileReader(Cog):
                         description="\n".join(
                             (
                                 f"Please upload Ryujinx log files to the correct location:\n",
-                                f'<#{config.bot_log_allowed_channels["support"]}>: General help and troubleshooting',
+                                f'<#{config.bot_log_allowed_channels["windows-support"]}>: Windows help and troubleshooting',
+                                f'<#{config.bot_log_allowed_channels["linux-support"]}>: Linux help and troubleshooting',
+                                f'<#{config.bot_log_allowed_channels["macos-support"]}>: macOS help and troubleshooting',
                                 f'<#{config.bot_log_allowed_channels["patreon-support"]}>: Help and troubleshooting for Patreon subscribers',
                                 f'<#{config.bot_log_allowed_channels["development"]}>: Ryujinx development discussion',
                                 f'<#{config.bot_log_allowed_channels["pr-testing"]}>: Discussion of in-progress pull request builds',
