@@ -38,7 +38,7 @@ class LogFileReader(Cog):
             "emu_info": {
                 "ryu_version": "Unknown",
                 "ryu_firmware": "Unknown",
-                "logs_enabled": None,
+                "logs_enabled": "Unknown",
             },
             "game_info": {
                 "game_name": "Unknown",
@@ -336,6 +336,29 @@ class LogFileReader(Cog):
                         )
                         continue
 
+                try:
+                    default_logs = ["Info", "Warning", "Error", "Guest", "Stub"]
+                    user_logs = (
+                        self.embed["emu_info"]["logs_enabled"]
+                        .rstrip()
+                        .replace(" ", "")
+                        .split(",")
+                    )
+                    if "Debug" in user_logs:
+                        debug_warning = f"⚠️ **Debug logs enabled will have a negative impact on performance**"
+                        self.embed["game_info"]["notes"].append(debug_warning)
+                    disabled_logs = set(default_logs).difference(set(user_logs))
+                    if disabled_logs:
+                        logs_status = [
+                            f"⚠️ {log} log is not enabled" for log in disabled_logs
+                        ]
+                        log_string = "\n".join(logs_status)
+                    else:
+                        log_string = "✅ Default logs enabled"
+                    self.embed["game_info"]["notes"].append(log_string)
+                except AttributeError:
+                    pass
+
                 def analyse_error_message(log_file=log_file):
                     try:
                         errors = []
@@ -542,29 +565,6 @@ class LogFileReader(Cog):
                         amd_gpu_warning = "**⚠️ AMD GPU users should consider using Vulkan graphics backend**"
                         self.embed["game_info"]["notes"].append(amd_gpu_warning)
 
-                try:
-                    default_logs = ["Info", "Warning", "Error", "Guest", "Stub"]
-                    user_logs = (
-                        self.embed["emu_info"]["logs_enabled"]
-                        .rstrip()
-                        .replace(" ", "")
-                        .split(",")
-                    )
-                    if "Debug" in user_logs:
-                        debug_warning = f"⚠️ **Debug logs enabled will have a negative impact on performance**"
-                        self.embed["game_info"]["notes"].append(debug_warning)
-                    disabled_logs = set(default_logs).difference(set(user_logs))
-                    if disabled_logs:
-                        logs_status = [
-                            f"⚠️ {log} log is not enabled" for log in disabled_logs
-                        ]
-                        log_string = "\n".join(logs_status)
-                    else:
-                        log_string = "✅ Default logs enabled"
-                    self.embed["game_info"]["notes"].append(log_string)
-                except AttributeError:
-                    pass
-
                 if self.embed["emu_info"]["ryu_firmware"] == "Unknown":
                     firmware_warning = f"**❌ Nintendo Switch firmware not found**"
                     self.embed["game_info"]["notes"].append(firmware_warning)
@@ -671,6 +671,133 @@ class LogFileReader(Cog):
                 return ordered_game_notes
             except AttributeError:
                 pass
+
+        def format_log_embed():
+            cleaned_game_name = re.sub(
+                r"\s\[(64|32)-bit\]$", "", self.embed["game_info"]["game_name"]
+            )
+            self.embed["game_info"]["game_name"] = cleaned_game_name
+
+            hardware_info = " | ".join(
+                (
+                    f"**CPU:** {self.embed['hardware_info']['cpu']}",
+                    f"**GPU:** {self.embed['hardware_info']['gpu']}",
+                    f"**RAM:** {self.embed['hardware_info']['ram']}",
+                    f"**OS:** {self.embed['hardware_info']['os']}",
+                )
+            )
+
+            system_settings_info = "\n".join(
+                (
+                    f"**Audio Backend:** `{self.embed['settings']['audio_backend']}`",
+                    f"**Console Mode:** `{self.embed['settings']['docked']}`",
+                    f"**PPTC Cache:** `{self.embed['settings']['pptc']}`",
+                    f"**Shader Cache:** `{self.embed['settings']['shader_cache']}`",
+                    f"**V-Sync:** `{self.embed['settings']['vsync']}`",
+                )
+            )
+
+            graphics_settings_info = "\n".join(
+                (
+                    f"**Graphics Backend:** `{self.embed['settings']['graphics_backend']}`",
+                    f"**Resolution:** `{self.embed['settings']['resolution_scale']}`",
+                    f"**Anisotropic Filtering:** `{self.embed['settings']['anisotropic_filtering']}`",
+                    f"**Aspect Ratio:** `{self.embed['settings']['aspect_ratio']}`",
+                    f"**Texture Recompression:** `{self.embed['settings']['texture_recompression']}`",
+                )
+            )
+
+            ryujinx_info = " | ".join(
+                (
+                    f"**Version:** {self.embed['emu_info']['ryu_version']}",
+                    f"**Firmware:** {self.embed['emu_info']['ryu_firmware']}",
+                )
+            )
+
+            log_embed = Embed(title=f"{cleaned_game_name}", colour=self.ryujinx_blue)
+
+            # If hardware info and emulator information are unknown due to logs being disabled, then don't display since that's useless
+            # Since the default value is "Unknown", only show if all values are NOT the same
+            if (
+                len(set(self.embed["hardware_info"].values())) != 1
+                and len(set(self.embed["emu_info"].values())) != 1
+            ):
+                log_embed.set_footer(text=f"Log uploaded by {author_name}")
+                log_embed.add_field(
+                    name="General Info",
+                    value=" | ".join((ryujinx_info, hardware_info)),
+                    inline=False,
+                )
+
+                log_embed.add_field(
+                    name="System Settings",
+                    value=system_settings_info,
+                    inline=True,
+                )
+                log_embed.add_field(
+                    name="Graphics Settings",
+                    value=graphics_settings_info,
+                    inline=True,
+                )
+            # Handle cases where game has NOT booted, but there are no errors in the log
+            if (
+                cleaned_game_name == "Unknown"
+                and self.embed["game_info"]["errors"] == "No errors found in log"
+            ):
+                log_embed.add_field(
+                    name="Empty Log",
+                    value=f"""The log file appears to be empty. To get a proper log, follow these steps:
+    1) In Logging settings, ensure `Enable Logging to File` is checked.
+    2) Ensure the following default logs are enabled: `Info`, `Warning`, `Error`, `Guest` and `Stub`.
+    3) Start a game up.
+    4) Play until your issue occurs.
+    5) Upload the latest log file which is larger than 2KB.""",
+                    inline=False,
+                )
+            # Handle cases where game has NOT booted, and there IS an error found in the log
+            if (
+                cleaned_game_name == "Unknown"
+                and self.embed["game_info"]["errors"] != "No errors found in log"
+            ):
+                log_embed.add_field(
+                    name="Latest Error Snippet",
+                    value=self.embed["game_info"]["errors"],
+                    inline=False,
+                )
+                log_embed.add_field(
+                    name="Log File Incomplete",
+                    value=f"""No game boot has been detected in log file. 
+    1) `Ryujinx` 🡒 `Options` 🡒 `Settings` 🡒 `Logging`
+        -`Enable Logging to File` must be enabled.
+        - See **Notes** for missing Logging Options to enable.
+        - **Do not** enable Developer Options / Debug or Trace Logging
+    2) Save the changes, close and reopen Ryujinx and boot a game.
+    3) Continue until the issue occurs again.
+    4) `File` 🡒 `Open Logs Folder` and send newest file which is larger than 2KB.
+        **Drag & drop the file to Discord**, do not edit it.""",
+                    inline=False,
+                )
+            else:
+                log_embed.add_field(
+                    name="Latest Error Snippet",
+                    value=self.embed["game_info"]["errors"],
+                    inline=False,
+                )
+                log_embed.add_field(
+                    name="Mods", value=self.embed["game_info"]["mods"], inline=False
+                )
+
+            try:
+                notes_value = "\n".join(game_notes)
+            except TypeError:
+                notes_value = "Nothing to note"
+            log_embed.add_field(
+                name="Notes",
+                value=notes_value,
+                inline=False,
+            )
+
+            return log_embed
 
         get_hardware_info()
         get_ryujinx_info()
