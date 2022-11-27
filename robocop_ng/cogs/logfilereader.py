@@ -603,7 +603,7 @@ class LogFileReader(Cog):
                     vsync_warning = f"⚠️ V-Sync disabled can cause instability like games running faster than intended or longer load times"
                     self.embed["game_info"]["notes"].append(vsync_warning)
 
-                if self.embed["settings"]["fs_integrity"] == "Disabled":
+                if self.embed["settings"]["fs_integrity"] == "False":
                     fs_integrity_warning = f"⚠️ Disabling file integrity checks may cause corrupted dumps to not be detected"
                     self.embed["game_info"]["notes"].append(fs_integrity_warning)
 
