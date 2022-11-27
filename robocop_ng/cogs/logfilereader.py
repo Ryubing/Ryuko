@@ -298,15 +298,6 @@ class LogFileReader(Cog):
                                     "Stretched": "Stretch to Fit Window",
                                 }
                                 setting[name] = aspect_map[setting_value]
-                            if name in [
-                                "pptc",
-                                "shader_cache",
-                                "texture_recompression",
-                                "vsync",
-                            ]:
-                                setting[
-                                    name
-                                ] = f"{'Enabled' if setting_value == 'True' else 'Disabled'}"
                         return setting[name]
 
                     setting_map = {
@@ -492,7 +483,7 @@ class LogFileReader(Cog):
 
                 if (
                     vulkan_out_of_memory_warn
-                    and self.embed["settings"]["texture_recompression"] == "Disabled"
+                    and self.embed["settings"]["texture_recompression"] == "False"
                 ):
                     vulkan_out_of_memory_warn = f"⚠️ Consider enabling `Texture Recompression` in Ryujinx settings"
                     self.embed["game_info"]["notes"].append(vulkan_out_of_memory_warn)
@@ -575,11 +566,11 @@ class LogFileReader(Cog):
                     )
                     self.embed["game_info"]["notes"].append(dummy_warning)
 
-                if self.embed["settings"]["pptc"] == "Disabled":
+                if self.embed["settings"]["pptc"] == "False":
                     pptc_warning = f"🔴 **PPTC cache should be enabled**"
                     self.embed["game_info"]["notes"].append(pptc_warning)
 
-                if self.embed["settings"]["shader_cache"] == "Disabled":
+                if self.embed["settings"]["shader_cache"] == "False":
                     shader_warning = f"🔴 **Shader cache should be enabled**"
                     self.embed["game_info"]["notes"].append(shader_warning)
 
@@ -599,7 +590,7 @@ class LogFileReader(Cog):
                         ignore_missing_services_warning
                     )
 
-                if self.embed["settings"]["vsync"] == "Disabled":
+                if self.embed["settings"]["vsync"] == "False":
                     vsync_warning = f"⚠️ V-Sync disabled can cause instability like games running faster than intended or longer load times"
                     self.embed["game_info"]["notes"].append(vsync_warning)
 
@@ -679,6 +670,17 @@ class LogFileReader(Cog):
                 r"\s\[(64|32)-bit\]$", "", self.embed["game_info"]["game_name"]
             )
             self.embed["game_info"]["game_name"] = cleaned_game_name
+
+            for key, value in self.embed["settings"].items():
+                if key in [
+                    "pptc",
+                    "shader_cache",
+                    "texture_recompression",
+                    "vsync",
+                ]:
+                    self.embed["settings"][
+                        key
+                    ] = f"{'Enabled' if value == 'True' else 'Disabled'}"
 
             hardware_info = " | ".join(
                 (
