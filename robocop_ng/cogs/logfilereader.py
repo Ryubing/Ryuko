@@ -41,6 +41,7 @@ class LogFileReader(Cog):
                 "logs_enabled": "Unknown",
             },
             "game_info": {
+                "cheats": "No cheats loaded",
                 "game_name": "Unknown",
                 "errors": "No errors found in log",
                 "mods": "No mods found",
@@ -494,24 +495,53 @@ class LogFileReader(Cog):
                     timestamp_message = f"ℹ️ Time elapsed: `{latest_timestamp}`"
                     self.embed["game_info"]["notes"].append(timestamp_message)
 
-                def mods_information(log_file=log_file):
-                    mods_regex = re.compile(r"Found mod\s\'(.+?)\'\s(\[.+?\])")
-                    matches = re.findall(mods_regex, log_file)
-                    if matches:
-                        mods = [
-                            {"mod": match[0], "status": match[1]} for match in matches
-                        ]
-                        mods_status = [
-                            f"ℹ️ {i['mod']} ({'ExeFS' if i['status'] == '[E]' else 'RomFS'})"
-                            for i in mods
-                        ]
-                        # Remove duplicated mods from output
-                        mods_status = list(dict.fromkeys(mods_status))
-                        return mods_status
+                mods_regex = re.compile(r"Found mod\s\'(.+?)\'\s(\[.+?\])")
 
-                game_mods = mods_information()
+                # Finds cheats that are enabled, not just installed.
+                # Installed cheats use the string: ModLoader LoadCheats: Installing cheat '<60 FPS Cheat>'
+                cheats_regex = re.compile(
+                    r"AdvanceTamperingsQueue: Tampering program <(.+?) Cheat>"
+                )
+
+                def cheats_mods_information(
+                    mods_search, cheats_search, log_file=log_file
+                ):
+                    mods_found = None
+                    cheats_found = None
+                    mods_matches = re.findall(mods_search, log_file)
+                    cheats_matches = re.findall(cheats_search, log_file)
+                    try:
+                        if mods_matches:
+                            mods = [
+                                {"mod": match[0], "status": match[1]}
+                                for match in mods_matches
+                            ]
+                            mods_found = [
+                                f"ℹ️ {i['mod']} ({'ExeFS' if i['status'] == '[E]' else 'RomFS'})"
+                                for i in mods
+                            ]
+                            # Remove duplicated mods from output
+                            mods_found = list(dict.fromkeys(mods_found))
+                        if cheats_matches:
+                            cheats_found = [f"ℹ️ {match}" for match in cheats_matches]
+                        return mods_found, cheats_found
+                    except UnboundLocalError:
+                        pass
+
+                game_mods, game_cheats = cheats_mods_information(
+                    mods_regex, cheats_regex
+                )
                 if game_mods:
                     self.embed["game_info"]["mods"] = "\n".join(game_mods)
+                game_cheats_total_amount = None
+                game_cheats_display_amount = None
+                if game_cheats:
+                    self.embed["game_info"]["cheats"] = game_cheats
+                    game_cheats_total_amount = len(self.embed["game_info"]["cheats"])
+                    game_cheats_display_amount = len(
+                        self.embed["game_info"]["cheats"][:5]
+                    )
+                    self.embed["game_info"]["cheats"] = "\n".join(game_cheats[:5])
                 else:
                     pass
 
@@ -665,7 +695,11 @@ class LogFileReader(Cog):
                 ordered_game_notes = sorted(
                     sorted(game_notes, key=lambda x: x.split()[1]), key=severity
                 )
-                return ordered_game_notes
+                return (
+                    ordered_game_notes,
+                    game_cheats_total_amount,
+                    game_cheats_display_amount,
+                )
             except AttributeError:
                 pass
 
@@ -794,6 +828,13 @@ class LogFileReader(Cog):
                 log_embed.add_field(
                     name="Mods", value=self.embed["game_info"]["mods"], inline=False
                 )
+                log_embed.add_field(
+                    name=f"Cheats ({displayed_cheats_amount}/{total_cheats_amount})"
+                    if total_cheats_amount
+                    else "Cheats",
+                    value=self.embed["game_info"]["cheats"],
+                    inline=False,
+                )
 
             try:
                 notes_value = "\n".join(game_notes)
@@ -809,7 +850,7 @@ class LogFileReader(Cog):
 
         get_hardware_info()
         get_ryujinx_info()
-        game_notes = analyse_log()
+        game_notes, total_cheats_amount, displayed_cheats_amount = analyse_log()
 
         return format_log_embed()
 
