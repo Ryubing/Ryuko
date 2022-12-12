@@ -626,7 +626,11 @@ class LogFileReader(Cog):
                         break
 
                 if is_channel_allowed:
-                    if re.match(pr_version, self.embed["emu_info"]["ryu_version"]):
+                    if (
+                        re.match(pr_version, self.embed["emu_info"]["ryu_version"])
+                        and message.channel_id
+                        != config.bot_log_allowed_channels["pr-testing"]
+                    ):
                         pr_version_warning = f"**⚠️ PR build logs should be posted in <#{config.bot_log_allowed_channels['pr-testing']}> if reporting bugs or tests**"
                         self.embed["game_info"]["notes"].append(pr_version_warning)
 
