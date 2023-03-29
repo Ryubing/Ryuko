@@ -9,6 +9,7 @@ from robocop_ng.helpers.macros import get_macro, add_macro, edit_macro, remove_m
 
 
 class Macro(Cog):
+    @commands.cooldown(3, 30, BucketType.member)
     @commands.command(aliases=["m"])
     async def macro(self, ctx: Context, target: Optional[discord.Member], key: str):
         if len(key) > 0:
@@ -47,7 +48,7 @@ class Macro(Cog):
         else:
             await ctx.send(f"Error: Macro '{key}' not found.")
 
-    @commands.cooldown(5, 10, BucketType.channel)
+    @commands.cooldown(3, 30, BucketType.channel)
     @commands.command(name="macros", aliases=["ml", "listmacros", "list_macros"])
     async def list_macros(self, ctx: Context):
         macros = get_macros()
