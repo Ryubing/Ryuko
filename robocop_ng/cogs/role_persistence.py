@@ -8,7 +8,7 @@ class RolePersistence(Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @Cog.listener
+    @Cog.listener()
     async def on_raw_member_remove(self, payload: RawMemberRemoveEvent):
         save_roles = []
         for role in payload.user.roles:
@@ -20,7 +20,7 @@ class RolePersistence(Cog):
         if len(save_roles) > 0:
             add_user_roles(payload.user.id, save_roles)
 
-    @Cog.listener
+    @Cog.listener()
     async def on_member_join(self, member: Member):
         user_roles = get_user_roles(member.id)
         if len(user_roles) > 0:
