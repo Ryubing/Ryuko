@@ -10,7 +10,7 @@ repository = "https://github.com/reswitched/robocop-ng"
 [tool.poetry.dependencies]
 python = "^3.8"
 python-dateutil = "^2.8.2"
-humanize = "^3.3.0"
+humanize = "^4.6.0"
 parsedatetime = "^2.6"
 aiohttp = "^3.8.4"
 gidgethub = "^5.2.1"
