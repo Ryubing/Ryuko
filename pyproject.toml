@@ -14,7 +14,7 @@ humanize = "^4.6.0"
 parsedatetime = "^2.6"
 aiohttp = "^3.8.4"
 gidgethub = "^5.2.1"
-Pillow = "^9.2.0"
+Pillow = "^9.5.0"
 "discord.py" = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
