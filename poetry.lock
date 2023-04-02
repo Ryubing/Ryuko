@@ -381,14 +381,14 @@ files = [
 
 [[package]]
 name = "gidgethub"
-version = "5.2.0"
+version = "5.2.1"
 description = "An async GitHub API library"
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "gidgethub-5.2.0-py3-none-any.whl", hash = "sha256:390caafb3e9c6125bb9c8c9865a78d09e028f19592352d5b88e0ed881b8dea18"},
-    {file = "gidgethub-5.2.0.tar.gz", hash = "sha256:c359b769194e72f984d2e328de0ee8eb81b702342b0a44dc5cebac92104ecf4b"},
+    {file = "gidgethub-5.2.1-py3-none-any.whl", hash = "sha256:8ac9cf5314aac0f3a33f46127d4a538d0ed1a7030027eb2fc4aa3b55c66abcef"},
+    {file = "gidgethub-5.2.1.tar.gz", hash = "sha256:a533f85a57955261433c250701476304cc374037c0ab66b0e5372b4846749d5c"},
 ]
 
 [package.dependencies]
@@ -731,4 +731,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "799b992fee4f0db53af5c1c6192c90553b7b60593fec66c9f530457754bccdb2"
+content-hash = "a5b64be53e1d479b75212284ea8506f631801b1d57b00c06332f88459da44c63"
