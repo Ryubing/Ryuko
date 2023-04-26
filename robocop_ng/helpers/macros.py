@@ -85,6 +85,8 @@ def add_aliases(bot, key: str, aliases: list[str]) -> bool:
         for alias in aliases:
             alias = alias.lower()
             if is_macro_key_available(bot, alias, macros):
+                if key not in macros["aliases"].keys():
+                    macros["aliases"][key] = []
                 macros["aliases"][key].append(alias)
                 success = True
         if success:
