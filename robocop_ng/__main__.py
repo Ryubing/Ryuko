@@ -6,6 +6,7 @@ import sys
 import aiohttp
 import discord
 from discord.ext import commands
+from discord.ext.commands import CommandError, Context
 
 if len(sys.argv[1:]) != 1:
     sys.stderr.write("usage: <state_dir>")
@@ -133,12 +134,12 @@ async def on_command(ctx):
 
 
 @bot.event
-async def on_error(event_method, *args, **kwargs):
-    log.exception(f"Error on {event_method}:")
+async def on_error(event: str, *args, **kwargs):
+    log.exception(f"Error on {event}:")
 
 
 @bot.event
-async def on_command_error(ctx, error):
+async def on_command_error(ctx: Context, error: CommandError):
     error_text = str(error)
 
     err_msg = (
@@ -147,7 +148,7 @@ async def on_command_error(ctx, error):
         f"of type {type(error)}: {error_text}"
     )
 
-    log.error(err_msg)
+    log.exception(err_msg, error)
 
     if not isinstance(error, commands.CommandNotFound):
         err_msg = bot.escape_message(err_msg)
@@ -259,8 +260,8 @@ async def main():
         for cog in config.initial_cogs:
             try:
                 await bot.load_extension(cog)
-            except:
-                log.exception(f"Failed to load cog {cog}.")
+            except Exception as e:
+                log.exception(f"Failed to load cog {cog}:", e)
         await bot.start(config.token)
 
 
