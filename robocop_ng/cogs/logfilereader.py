@@ -23,7 +23,7 @@ logging.basicConfig(
 
 class LogFileReader(Cog):
     @staticmethod
-    def is_valid_log(attachment: Attachment) -> tuple[bool, bool]:
+    def is_valid_log_name(attachment: Attachment) -> tuple[bool, bool]:
         filename = attachment.filename
         # Any message over 2000 chars is uploaded as message.txt, so this is accounted for
         ryujinx_log_file_regex = re.compile(r"^Ryujinx_.*\.log|message\.txt$")
@@ -94,7 +94,15 @@ class LogFileReader(Cog):
         # Large files show a header value when not downloaded completely
         # this regex makes sure that the log text to read starts from the first timestamp, ignoring headers
         log_file_header_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}.*", re.DOTALL)
-        log_file = re.search(log_file_header_regex, log_file).group(0)
+        log_file_match = re.search(log_file_header_regex, log_file)
+
+        if log_file_match:
+            log_file = log_file_match.group(0)
+        else:
+            return Embed(
+                colour=self.ryujinx_blue,
+                description="This log file appears to be invalid. Please make sure to upload a Ryujinx log file.",
+            )
 
         def is_tid_blocked(log_file=log_file):
             game_name = re.search(
@@ -828,7 +836,7 @@ class LogFileReader(Cog):
                 return await message.channel.send(
                     content=author_mention,
                     embed=Embed(
-                        description=f"This log file appears to be invalid. Please re-check and re-upload your log file.",
+                        description="This log file appears to be invalid. Please re-check and re-upload your log file.",
                         colour=self.ryujinx_blue,
                     ),
                 )
@@ -866,7 +874,7 @@ class LogFileReader(Cog):
             message = await ctx.fetch_message(ctx.message.reference.message_id)
             if len(message.attachments) >= attachment_number:
                 attachment = message.attachments[attachment_number - 1]
-                is_log_file, _ = self.is_valid_log(attachment)
+                is_log_file, _ = self.is_valid_log_name(attachment)
 
                 if is_log_file:
                     return await self.analyse_log_message(
@@ -888,7 +896,7 @@ class LogFileReader(Cog):
         if message.author.bot:
             return
         for attachment in message.attachments:
-            is_log_file, is_ryujinx_log_file = self.is_valid_log(attachment)
+            is_log_file, is_ryujinx_log_file = self.is_valid_log_name(attachment)
 
             if message.channel.id in self.bot_log_allowed_channels.values():
                 return await self.analyse_log_message(
@@ -904,7 +912,7 @@ class LogFileReader(Cog):
                 )
             elif (
                 is_log_file
-                and not message.channel.id in self.bot_log_allowed_channels.values()
+                and message.channel.id not in self.bot_log_allowed_channels.values()
             ):
                 return await message.author.send(
                     content=message.author.mention,
