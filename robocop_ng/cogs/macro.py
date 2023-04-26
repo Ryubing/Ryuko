@@ -127,13 +127,24 @@ class Macro(Cog):
 
     @commands.cooldown(3, 30, BucketType.channel)
     @commands.command(name="macros", aliases=["ml", "listmacros", "list_macros"])
-    async def list_macros(self, ctx: Context):
+    async def list_macros(self, ctx: Context, macros_only=False):
         macros = get_macros_dict(self.bot)
         if len(macros["macros"]) > 0:
-            macros = [f"- {key}\n" for key in sorted(macros["macros"].keys())]
             message = "📝 **Macros**:\n"
-            for macro_key in macros:
-                message += macro_key
+
+            for key in sorted(macros["macros"].keys()):
+                message += f"- {key}\n"
+                if not macros_only and key in macros["aliases"].keys():
+                    message += "  - __aliases__: "
+                    first_alias = True
+                    for alias in macros["aliases"][key]:
+                        if first_alias:
+                            message += alias
+                            first_alias = False
+                            continue
+                        message += f", {alias}"
+                    message += "\n"
+
             await ctx.send(message)
         else:
             await ctx.send("Couldn't find any macros.")
