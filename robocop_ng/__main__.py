@@ -148,7 +148,7 @@ async def on_command_error(ctx: Context, error: CommandError):
         f"of type {type(error)}: {error_text}"
     )
 
-    log.exception(err_msg, error)
+    log.exception(err_msg)
 
     if not isinstance(error, commands.CommandNotFound):
         err_msg = bot.escape_message(err_msg)
