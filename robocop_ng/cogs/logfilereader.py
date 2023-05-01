@@ -722,13 +722,16 @@ class LogFileReader(Cog):
                 pass
 
         if is_tid_blocked():
-            warn_message = await message.reply(
-                f".warn This log contains a blocked title id."
-            )
-            await self.bot.invoke(await self.bot.get_context(warn_message))
+            warn_command = self.bot.get_command("warn")
+            if warn_command is not None:
+                warn_message = await message.reply(".warn This log contains a blocked title id.")
+                warn_context = await self.bot.get_context(warn_message)
+                await warn_context.invoke(warn_command, reason="This log contains a blocked title id.")
+            else:
+                logging.error(f"Couldn't find 'warn' command. Unable to warn {message.author}.")
 
             pirate_role = message.guild.get_role(self.bot.config.named_roles["pirate"])
-            message.author.add_roles(pirate_role)
+            await message.author.add_roles(pirate_role)
 
             embed = Embed(
                 title="⛔ Blocked game detected ⛔",
