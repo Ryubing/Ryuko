@@ -17,7 +17,7 @@ from robocop_ng.helpers.disabled_ids import (
     is_build_id_valid,
     add_disabled_build_id,
     remove_disabled_build_id,
-    is_build_id_disabled,
+    is_build_id_disabled, is_ro_section_disabled,
 )
 
 logging.basicConfig(
@@ -109,7 +109,10 @@ class LogFileReader(Cog):
                 description="This log file appears to be invalid. Please make sure to upload a Ryujinx log file.",
             )
 
-        def get_app_info(log_file=log_file) -> Optional[tuple[str, str, list[str]]]:
+        def get_main_ro_section(log_file=log_file) -> dict[str, str]:
+            return {}
+
+        def get_app_info(log_file=log_file) -> Optional[tuple[str, str, list[str], dict[str, str]]]:
             game_name = re.search(
                 r"Loader [A-Za-z]*: Application Loaded:\s([^;\n\r]*)",
                 log_file,
@@ -135,21 +138,21 @@ class LogFileReader(Cog):
                         if is_build_id_valid(bid.strip())
                     ]
 
-                    return app_id, app_id_from_bids, build_ids
+                    return app_id, app_id_from_bids, build_ids, get_main_ro_section()
             return None
 
         def is_log_valid(log_file=log_file) -> bool:
             app_info = get_app_info()
             if app_info is None:
                 return True
-            app_id, another_app_id, _ = app_info
+            app_id, another_app_id, _, _ = app_info
             return app_id == another_app_id
 
         def is_game_blocked(log_file=log_file) -> bool:
             app_info = get_app_info()
             if app_info is None:
                 return False
-            app_id, another_app_id, build_ids = app_info
+            app_id, another_app_id, build_ids, main_ro_section = app_info
             if is_app_id_disabled(self.bot, app_id) or is_app_id_disabled(
                 self.bot, another_app_id
             ):
@@ -157,7 +160,7 @@ class LogFileReader(Cog):
             for bid in build_ids:
                 if is_build_id_disabled(self.bot, bid):
                     return True
-            return False
+            return is_ro_section_disabled(self.bot, main_ro_section)
 
         def get_hardware_info(log_file=log_file):
             for setting in self.embed["hardware_info"]:
