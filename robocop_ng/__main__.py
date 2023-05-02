@@ -56,7 +56,7 @@ wanted_jsons = [
     "data/invites.json",
     "data/macros.json",
     "data/persistent_roles.json",
-    "data/disabled_tids.json",
+    "data/disabled_ids.json",
 ]
 
 for wanted_json_idx in range(len(wanted_jsons)):
