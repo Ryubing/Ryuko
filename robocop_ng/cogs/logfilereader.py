@@ -17,7 +17,11 @@ from robocop_ng.helpers.disabled_ids import (
     is_build_id_valid,
     add_disabled_build_id,
     remove_disabled_build_id,
-    is_build_id_disabled, is_ro_section_disabled,
+    is_build_id_disabled,
+    is_ro_section_disabled,
+    is_ro_section_valid,
+    add_disabled_ro_section,
+    remove_disabled_ro_section,
 )
 
 logging.basicConfig(
@@ -215,59 +219,6 @@ class LogFileReader(Cog):
                 colour=self.ryujinx_blue,
                 description="This log file appears to be invalid. Please make sure to upload a Ryujinx log file.",
             )
-
-        def get_main_ro_section(log_file=log_file) -> dict[str, str]:
-            return {}
-
-        def get_app_info(log_file=log_file) -> Optional[tuple[str, str, list[str], dict[str, str]]]:
-            game_name = re.search(
-                r"Loader [A-Za-z]*: Application Loaded:\s([^;\n\r]*)",
-                log_file,
-                re.MULTILINE,
-            )
-            if game_name is not None and len(game_name.groups()) > 0:
-                game_name = game_name.group(1).rstrip()
-                app_id_regex = re.match(r".* \[([a-zA-Z0-9]*)\]", game_name)
-                if app_id_regex:
-                    app_id = app_id_regex.group(1).strip()
-                else:
-                    app_id = None
-                bids_regex = re.search(
-                    r"Build ids found for title ([a-zA-Z0-9]*):[\n\r]*(.*)",
-                    log_file,
-                    re.DOTALL,
-                )
-                if bids_regex is not None and len(bids_regex.groups()) > 0:
-                    app_id_from_bids = bids_regex.group(1).strip()
-                    build_ids = [
-                        bid.strip()
-                        for bid in bids_regex.group(2).splitlines()
-                        if is_build_id_valid(bid.strip())
-                    ]
-
-                    return app_id, app_id_from_bids, build_ids, get_main_ro_section()
-            return None
-
-        def is_log_valid(log_file=log_file) -> bool:
-            app_info = get_app_info()
-            if app_info is None:
-                return True
-            app_id, another_app_id, _, _ = app_info
-            return app_id == another_app_id
-
-        def is_game_blocked(log_file=log_file) -> bool:
-            app_info = get_app_info()
-            if app_info is None:
-                return False
-            app_id, another_app_id, build_ids, main_ro_section = app_info
-            if is_app_id_disabled(self.bot, app_id) or is_app_id_disabled(
-                self.bot, another_app_id
-            ):
-                return True
-            for bid in build_ids:
-                if is_build_id_disabled(self.bot, bid):
-                    return True
-            return is_ro_section_disabled(self.bot, main_ro_section)
 
         def get_hardware_info(log_file=log_file):
             for setting in self.embed["hardware_info"]:
@@ -885,36 +836,8 @@ class LogFileReader(Cog):
             except AttributeError:
                 pass
 
-        if is_game_blocked():
-            warn_command = self.bot.get_command("warn")
-            if warn_command is not None:
-                warn_message = await message.reply(
-                    ".warn This log contains a blocked game."
-                )
-                warn_context = await self.bot.get_context(warn_message)
-                await warn_context.invoke(
-                    warn_command,
-                    target=None,
-                    reason="This log contains a blocked game.",
-                )
-            else:
-                logging.error(
-                    f"Couldn't find 'warn' command. Unable to warn {message.author}."
-                )
-
-            pirate_role = message.guild.get_role(self.bot.config.named_roles["pirate"])
-            await message.author.add_roles(pirate_role)
-
-            embed = Embed(
-                title="⛔ Blocked game detected ⛔",
-                colour=Colour(0xFF0000),
-                description="This log contains a blocked game and has been removed.\n"
-                "The user has been warned and the pirate role was applied.",
-            )
-            embed.set_footer(text=f"Log uploaded by {author_name}")
-
-            await message.delete()
-            return embed
+        if self.is_game_blocked(log_file):
+            return await self.blocked_game_action(message)
 
         for role in message.author.roles:
             if role.id in self.disallowed_roles:
@@ -925,7 +848,7 @@ class LogFileReader(Cog):
                 embed.set_footer(text=f"Log uploaded by {author_name}")
                 return embed
 
-        if not is_log_valid():
+        if not self.is_log_valid(log_file):
             embed = Embed(
                 title="⚠️ Modified log detected ⚠️",
                 colour=Colour(0xFCFC00),
@@ -1026,15 +949,100 @@ class LogFileReader(Cog):
             "app_id": "Application IDs",
             "build_id": "Build IDs",
         }.items():
-            message += f"- {name}:\n"
-            for disabled_id, note in disabled_ids[id_type].items():
-                message += (
-                    f"  - [{disabled_id.upper()}]: {note}\n"
-                    if note != ""
-                    else f"  - [{disabled_id}]\n"
-                )
-            message += "\n"
+            if len(disabled_ids[id_type].keys()) > 0:
+                message += f"- {name}:\n"
+                for disabled_id, note in disabled_ids[id_type].items():
+                    message += (
+                        f"  - [{disabled_id.upper()}]: {note}\n"
+                        if note != ""
+                        else f"  - [{disabled_id}]\n"
+                    )
+                message += "\n"
+        if len(disabled_ids["ro_section"].keys()) > 0:
+            message += "- Read-only sections:\n"
+            for note in disabled_ids["ro_section"].keys():
+                f"- [{note}]"
         return await ctx.send(message)
+
+    @commands.check(check_if_staff)
+    @commands.command(
+        aliases=[
+            "disallow_ro_section",
+            "forbid_ro_section",
+            "block_ro_section",
+            "blockrosection",
+        ]
+    )
+    async def disable_ro_section(
+        self, ctx: Context, note: str, ro_section_snippet: str
+    ):
+        ro_section_snippet = ro_section_snippet.strip("`").splitlines()
+        ro_section_snippet = [
+            line for line in ro_section_snippet if len(line.strip()) > 0
+        ]
+
+        ro_section_info_regex = re.search(
+            r"PrintRoSectionInfo: main:", ro_section_snippet[0]
+        )
+        if ro_section_info_regex is None:
+            ro_section_snippet.insert(0, "PrintRoSectionInfo: main:")
+
+        ro_section = self.get_main_ro_section("\n".join(ro_section_snippet))
+        if ro_section is not None and is_ro_section_valid(ro_section):
+            if add_disabled_ro_section(self.bot, note, ro_section):
+                return await ctx.send(
+                    f"The specified read-only section '{note}' is now blocked."
+                )
+            else:
+                return await ctx.send(
+                    f"The specified read-only section '{note}' is already blocked."
+                )
+
+    @commands.check(check_if_staff)
+    @commands.command(
+        aliases=[
+            "allow_ro_section",
+            "unblock_ro_section",
+            "allow_rosection",
+            "unblockrosection",
+        ]
+    )
+    async def enable_ro_section(self, ctx: Context, note: str):
+        if remove_disabled_ro_section(self.bot, note):
+            return await ctx.send(
+                f"The read-only section for '{note}' is now unblocked!"
+            )
+        else:
+            return await ctx.send(f"The read-only section for '{note}' is not blocked.")
+
+    @commands.check(check_if_staff)
+    @commands.command(
+        aliases=[
+            "get_blocked_ro_section",
+            "disabled_ro_section",
+            "blocked_ro_section" "list_disabled_ro_section",
+            "list_blocked_ro_section",
+        ]
+    )
+    async def get_disabled_ro_section(self, ctx: Context, note: str):
+        disabled_ids = get_disabled_ids(self.bot)
+        key_note = note.lower()
+        if key_note in disabled_ids["ro_section"].keys():
+            message = f"**Disabled read-only section for '{note}'**:\n"
+            message += "```\n"
+            for key, content in disabled_ids["ro_section"][key_note].items():
+                match key:
+                    case "module":
+                        message += f"Module: {content}\n"
+                    case "sdk_libraries":
+                        message += f"SDK Libraries: \n"
+                        for entry in content:
+                            message += f"  SDK {entry}\n"
+                message += "\n"
+            message += "```"
+            return await ctx.send(message)
+        else:
+            return await ctx.send("The specified read-only section is not blocked.")
 
     async def analyse_log_message(self, message: Message, attachment_index=0):
         author_id = message.author.id
