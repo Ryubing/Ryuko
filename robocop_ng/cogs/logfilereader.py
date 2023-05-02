@@ -55,6 +55,113 @@ class LogFileReader(Cog):
             async with session.get(log_url, headers=headers) as response:
                 return await response.text("UTF-8")
 
+    def get_main_ro_section(self, log_file: str) -> Optional[dict[str, str]]:
+        ro_section_regex = re.search(
+            r"PrintRoSectionInfo: main:[\r\n]*(.*)", log_file, re.DOTALL
+        )
+        if ro_section_regex is not None and len(ro_section_regex.groups()) > 0:
+            ro_section = {"module": "", "sdk_libraries": []}
+            for line in ro_section_regex.group(1).splitlines():
+                line = line.strip()
+                if line.startswith("Module:"):
+                    ro_section["module"] = line[8:]
+                elif line.startswith("SDK Libraries:"):
+                    ro_section["sdk_libraries"].append(line[19:])
+                elif line.startswith("SDK "):
+                    ro_section["sdk_libraries"].append(line[4:])
+                else:
+                    break
+            return ro_section
+        return None
+
+    def get_app_info(
+        self, log_file: str
+    ) -> Optional[tuple[str, str, list[str], dict[str, str]]]:
+        game_name = re.search(
+            r"Loader [A-Za-z]*: Application Loaded:\s([^;\n\r]*)",
+            log_file,
+            re.MULTILINE,
+        )
+        if game_name is not None and len(game_name.groups()) > 0:
+            game_name = game_name.group(1).rstrip()
+            app_id_regex = re.match(r".* \[([a-zA-Z0-9]*)\]", game_name)
+            if app_id_regex:
+                app_id = app_id_regex.group(1).strip()
+            else:
+                app_id = None
+            bids_regex = re.search(
+                r"Build ids found for title ([a-zA-Z0-9]*):[\n\r]*(.*)",
+                log_file,
+                re.DOTALL,
+            )
+            if bids_regex is not None and len(bids_regex.groups()) > 0:
+                app_id_from_bids = bids_regex.group(1).strip()
+                build_ids = [
+                    bid.strip()
+                    for bid in bids_regex.group(2).splitlines()
+                    if is_build_id_valid(bid.strip())
+                ]
+
+                # TODO: Check if self.get_main_ro_section() is None and return an error
+                return (
+                    app_id,
+                    app_id_from_bids,
+                    build_ids,
+                    self.get_main_ro_section(log_file),
+                )
+        return None
+
+    def is_log_valid(self, log_file: str) -> bool:
+        app_info = self.get_app_info(log_file)
+        if app_info is None:
+            return True
+        app_id, another_app_id, _, _ = app_info
+        return app_id == another_app_id
+
+    def is_game_blocked(self, log_file: str) -> bool:
+        app_info = self.get_app_info(log_file)
+        if app_info is None:
+            return False
+        app_id, another_app_id, build_ids, main_ro_section = app_info
+        if is_app_id_disabled(self.bot, app_id) or is_app_id_disabled(
+            self.bot, another_app_id
+        ):
+            return True
+        for bid in build_ids:
+            if is_build_id_disabled(self.bot, bid):
+                return True
+        return is_ro_section_disabled(self.bot, main_ro_section)
+
+    async def blocked_game_action(self, message: Message) -> Embed:
+        warn_command = self.bot.get_command("warn")
+        if warn_command is not None:
+            warn_message = await message.reply(
+                ".warn This log contains a blocked game."
+            )
+            warn_context = await self.bot.get_context(warn_message)
+            await warn_context.invoke(
+                warn_command,
+                target=None,
+                reason="This log contains a blocked game.",
+            )
+        else:
+            logging.error(
+                f"Couldn't find 'warn' command. Unable to warn {message.author}."
+            )
+
+        pirate_role = message.guild.get_role(self.bot.config.named_roles["pirate"])
+        await message.author.add_roles(pirate_role)
+
+        embed = Embed(
+            title="⛔ Blocked game detected ⛔",
+            colour=Colour(0xFF0000),
+            description="This log contains a blocked game and has been removed.\n"
+            "The user has been warned and the pirate role was applied.",
+        )
+        embed.set_footer(text=f"Log uploaded by @{message.author.name}")
+        await message.delete()
+        return embed
+
     async def log_file_read(self, message):
         self.embed = {
             "hardware_info": {
@@ -1028,7 +1135,22 @@ class LogFileReader(Cog):
         for attachment in message.attachments:
             is_log_file, is_ryujinx_log_file = self.is_valid_log_name(attachment)
 
-            if (
+            if is_log_file and not is_ryujinx_log_file:
+                attached_log = message.attachments[0]
+                log_file = await self.download_file(attached_log.url)
+                # Large files show a header value when not downloaded completely
+                # this regex makes sure that the log text to read starts from the first timestamp, ignoring headers
+                log_file_header_regex = re.compile(
+                    r"\d{2}:\d{2}:\d{2}\.\d{3}.*", re.DOTALL
+                )
+                log_file_match = re.search(log_file_header_regex, log_file)
+                if log_file_match:
+                    log_file = log_file_match.group(0)
+                    if self.is_game_blocked(log_file):
+                        return await message.channel.send(
+                            content=None, embed=await self.blocked_game_action(message)
+                        )
+            elif (
                 is_log_file
                 and is_ryujinx_log_file
                 and message.channel.id in self.bot_log_allowed_channels.values()
