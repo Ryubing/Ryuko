@@ -647,10 +647,10 @@ class LogFileReader(Cog):
                         return mods_status
 
                 def cheat_information(log_file=log_file):
-                    cheat_regex = re.compile(r"Installing cheat\s\'(.+?)\'")
+                    cheat_regex = re.compile(r"Installing cheat\s\'<?(.+?)>?\'")
                     matches = re.findall(cheat_regex, log_file)
                     if matches:
-                        cheats = [match[0] for match in matches]
+                        cheats = [f"ℹ️ {match}" for match in matches]
                         return list(set(cheats))
 
                 game_mods = mods_information()
