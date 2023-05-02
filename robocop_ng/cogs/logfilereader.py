@@ -7,12 +7,16 @@ from discord.ext import commands
 from discord.ext.commands import Cog, Context
 
 from robocop_ng.helpers.checks import check_if_staff
-from robocop_ng.helpers.disabled_tids import (
-    add_disabled_tid,
-    is_tid_valid,
-    remove_disabled_tid,
-    get_disabled_tids,
-    is_tid_disabled,
+from robocop_ng.helpers.disabled_ids import (
+    add_disabled_app_id,
+    is_app_id_valid,
+    remove_disabled_app_id,
+    get_disabled_ids,
+    is_app_id_disabled,
+    is_build_id_valid,
+    add_disabled_build_id,
+    remove_disabled_build_id,
+    is_build_id_disabled,
 )
 
 logging.basicConfig(
@@ -760,50 +764,98 @@ class LogFileReader(Cog):
 
     @commands.check(check_if_staff)
     @commands.command(
-        aliases=["disallow_log_tid", "forbid_log_tid", "block_tid", "blocktid"]
+        aliases=["disallow_log_id", "forbid_log_id", "block_id", "blockid"]
     )
-    async def disable_log_tid(self, ctx: Context, tid: str, note=""):
-        if not is_tid_valid(tid):
-            return await ctx.send("The specified TID is invalid.")
+    async def disable_log_id(
+        self, ctx: Context, block_id_type: str, block_id: str, note=""
+    ):
+        match block_id_type.lower():
+            case "app" | "app_id" | "appid" | "tid" | "title_id":
+                if not is_app_id_valid(block_id):
+                    return await ctx.send("The specified app id is invalid.")
 
-        if add_disabled_tid(self.bot, tid, note):
-            return await ctx.send(f"TID '{tid}' is now blocked!")
-        else:
-            return await ctx.send(f"TID '{tid}' is already blocked.")
+                if add_disabled_app_id(self.bot, block_id, note):
+                    return await ctx.send(
+                        f"Application id '{block_id}' is now blocked!"
+                    )
+                else:
+                    return await ctx.send(
+                        f"Application id '{block_id}' is already blocked."
+                    )
+            case "build" | "build_id", "bid":
+                if not is_build_id_valid(block_id):
+                    return await ctx.send("The specified build id is invalid.")
+
+                if add_disabled_build_id(self.bot, block_id, note):
+                    return await ctx.send(f"Build id '{block_id}' is now blocked!")
+                else:
+                    return await ctx.send(f"Build id '{block_id}' is already blocked.")
+            case _:
+                return await ctx.send(
+                    "The specified id type is invalid. Valid id types are: ['app_id', 'build_id']"
+                )
 
     @commands.check(check_if_staff)
     @commands.command(
         aliases=[
-            "allow_log_tid",
-            "unblock_log_tid",
-            "unblock_tid",
-            "allow_tid",
-            "unblocktid",
+            "allow_log_id",
+            "unblock_log_id",
+            "unblock_id",
+            "allow_id",
+            "unblockid",
         ]
     )
-    async def enable_log_tid(self, ctx: Context, tid: str):
-        if not is_tid_valid(tid):
-            return await ctx.send("The specified TID is invalid.")
+    async def enable_log_id(self, ctx: Context, block_id_type: str, block_id: str):
+        match block_id_type.lower():
+            case "app" | "app_id" | "appid" | "tid" | "title_id":
+                if not is_app_id_valid(block_id):
+                    return await ctx.send("The specified app id is invalid.")
 
-        if remove_disabled_tid(self.bot, tid):
-            return await ctx.send(f"TID '{tid}' is now unblocked!")
-        else:
-            return await ctx.send(f"TID '{tid}' is not blocked.")
+                if remove_disabled_app_id(self.bot, block_id):
+                    return await ctx.send(
+                        f"Application id '{block_id}' is now unblocked!"
+                    )
+                else:
+                    return await ctx.send(
+                        f"Application id '{block_id}' is not blocked."
+                    )
+            case "build" | "build_id", "bid":
+                if not is_build_id_valid(block_id):
+                    return await ctx.send("The specified build id is invalid.")
+
+                if remove_disabled_build_id(self.bot, block_id):
+                    return await ctx.send(f"Build id '{block_id}' is now unblocked!")
+                else:
+                    return await ctx.send(f"Build id '{block_id}' is not blocked.")
+            case _:
+                return await ctx.send(
+                    "The specified id type is invalid. Valid id types are: ['app_id', 'build_id']"
+                )
 
     @commands.check(check_if_staff)
     @commands.command(
         aliases=[
-            "blocked_tids",
-            "listblockedtids",
-            "list_blocked_log_tids",
-            "list_blocked_tids",
+            "blocked_ids",
+            "listblockedids",
+            "list_blocked_log_ids",
+            "list_blocked_ids",
         ]
     )
-    async def list_disabled_tids(self, ctx: Context):
-        disabled_tids = get_disabled_tids(self.bot)
-        message = "**Blocking analysis of the following TIDs:**\n"
-        for tid, note in disabled_tids.items():
-            message += f"- [{tid.upper()}]: {note}\n" if note != "" else f"- [{tid}]\n"
+    async def list_disabled_ids(self, ctx: Context):
+        disabled_ids = get_disabled_ids(self.bot)
+        message = "**Blocking analysis of the following IDs:**\n"
+        for id_type, name in {
+            "app_id": "Application IDs",
+            "build_id": "Build IDs",
+        }.items():
+            message += f"- {name}:\n"
+            for disabled_id, note in disabled_ids[id_type].items():
+                message += (
+                    f"  - [{disabled_id.upper()}]: {note}\n"
+                    if note != ""
+                    else f"  - [{disabled_id}]\n"
+                )
+            message += "\n"
         return await ctx.send(message)
 
     async def analyse_log_message(self, message: Message, attachment_index=0):
