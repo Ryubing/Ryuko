@@ -1,5 +1,6 @@
 import logging
 import re
+from typing import Optional
 
 import aiohttp
 from discord import Colour, Embed, Message, Attachment
@@ -108,7 +109,7 @@ class LogFileReader(Cog):
                 description="This log file appears to be invalid. Please make sure to upload a Ryujinx log file.",
             )
 
-        def is_tid_blocked(log_file=log_file):
+        def get_app_info(log_file=log_file) -> Optional[tuple[str, str, list[str]]]:
             game_name = re.search(
                 r"Loader [A-Za-z]*: Application Loaded:\s([^;\n\r]*)",
                 log_file,
@@ -116,10 +117,46 @@ class LogFileReader(Cog):
             )
             if game_name is not None and len(game_name.groups()) > 0:
                 game_name = game_name.group(1).rstrip()
-                tid = re.match(r".* \[([a-zA-Z0-9]*)\]", game_name)
-                if tid is not None:
-                    tid = tid.group(1).strip()
-                    return is_tid_disabled(self.bot, tid)
+                app_id_regex = re.match(r".* \[([a-zA-Z0-9]*)\]", game_name)
+                if app_id_regex:
+                    app_id = app_id_regex.group(1).strip()
+                else:
+                    app_id = None
+                bids_regex = re.search(
+                    r"Build ids found for title ([a-zA-Z0-9]*):[\n\r]*(.*)",
+                    log_file,
+                    re.DOTALL,
+                )
+                if bids_regex is not None and len(bids_regex.groups()) > 0:
+                    app_id_from_bids = bids_regex.group(1).strip()
+                    build_ids = [
+                        bid.strip()
+                        for bid in bids_regex.group(2).splitlines()
+                        if is_build_id_valid(bid.strip())
+                    ]
+
+                    return app_id, app_id_from_bids, build_ids
+            return None
+
+        def is_log_valid(log_file=log_file) -> bool:
+            app_info = get_app_info()
+            if app_info is None:
+                return True
+            app_id, another_app_id, _ = app_info
+            return app_id == another_app_id
+
+        def is_game_blocked(log_file=log_file) -> bool:
+            app_info = get_app_info()
+            if app_info is None:
+                return False
+            app_id, another_app_id, build_ids = app_info
+            if is_app_id_disabled(self.bot, app_id) or is_app_id_disabled(
+                self.bot, another_app_id
+            ):
+                return True
+            for bid in build_ids:
+                if is_build_id_disabled(self.bot, bid):
+                    return True
             return False
 
         def get_hardware_info(log_file=log_file):
@@ -738,17 +775,17 @@ class LogFileReader(Cog):
             except AttributeError:
                 pass
 
-        if is_tid_blocked():
+        if is_game_blocked():
             warn_command = self.bot.get_command("warn")
             if warn_command is not None:
                 warn_message = await message.reply(
-                    ".warn This log contains a blocked title id."
+                    ".warn This log contains a blocked game."
                 )
                 warn_context = await self.bot.get_context(warn_message)
                 await warn_context.invoke(
                     warn_command,
                     target=None,
-                    reason="This log contains a blocked title id.",
+                    reason="This log contains a blocked game.",
                 )
             else:
                 logging.error(
@@ -761,12 +798,30 @@ class LogFileReader(Cog):
             embed = Embed(
                 title="⛔ Blocked game detected ⛔",
                 colour=Colour(0xFF0000),
-                description="This log contains a blocked title id and has been removed.\n"
+                description="This log contains a blocked game and has been removed.\n"
                 "The user has been warned and the pirate role was applied.",
             )
             embed.set_footer(text=f"Log uploaded by {author_name}")
 
             await message.delete()
+            return embed
+
+        for role in message.author.roles:
+            if role.id in self.disallowed_roles:
+                embed = Embed(
+                    colour=Colour(0xFF0000),
+                    description="I'm not allowed to analyse this log.",
+                )
+                embed.set_footer(text=f"Log uploaded by {author_name}")
+                return embed
+
+        if not is_log_valid():
+            embed = Embed(
+                title="⚠️ Modified log detected ⚠️",
+                colour=Colour(0xFCFC00),
+                description="This log contains manually modified information and won't be analysed.",
+            )
+            embed.set_footer(text=f"Log uploaded by {author_name}")
             return embed
 
         get_hardware_info()
@@ -878,12 +933,6 @@ class LogFileReader(Cog):
         filesize = message.attachments[attachment_index].size
         # Any message over 2000 chars is uploaded as message.txt, so this is accounted for
         log_file_link = message.jump_url
-
-        for role in message.author.roles:
-            if role.id in self.disallowed_roles:
-                return await message.channel.send(
-                    "I'm not allowed to analyse this log."
-                )
 
         uploaded_logs_exist = [
             True for elem in self.uploaded_log_info if filename in elem.values()
