@@ -71,6 +71,7 @@ class LogFileReader(Cog):
                 "game_name": "Unknown",
                 "errors": "No errors found in log",
                 "mods": "No mods found",
+                "cheats": "No cheats found",
                 "notes": [],
             },
             "settings": {
@@ -287,6 +288,9 @@ class LogFileReader(Cog):
                 )
                 log_embed.add_field(
                     name="Mods", value=self.embed["game_info"]["mods"], inline=False
+                )
+                log_embed.add_field(
+                    name="Cheats", value=self.embed["game_info"]["cheats"], inline=False
                 )
 
             try:
@@ -544,11 +548,20 @@ class LogFileReader(Cog):
                         mods_status = list(dict.fromkeys(mods_status))
                         return mods_status
 
+                def cheat_information(log_file=log_file):
+                    cheat_regex = re.compile(r"Installing cheat\s\'(.+?)\'")
+                    matches = re.findall(cheat_regex, log_file)
+                    if matches:
+                        cheats = [match[0] for match in matches]
+                        return list(set(cheats))
+
                 game_mods = mods_information()
                 if game_mods:
                     self.embed["game_info"]["mods"] = "\n".join(game_mods)
-                else:
-                    pass
+
+                game_cheats = cheat_information()
+                if game_cheats:
+                    self.embed["game_info"]["cheats"] = "\n".join(game_cheats)
 
                 controllers_regex = re.compile(r"Hid Configure: ([^\r\n]+)")
                 controllers = re.findall(controllers_regex, log_file)
