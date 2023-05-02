@@ -661,6 +661,14 @@ class LogFileReader(Cog):
                 if game_cheats:
                     self.embed["game_info"]["cheats"] = "\n".join(game_cheats)
 
+                if (
+                    re.search(r"UserId: 00000000000000010000000000000000", log_file)
+                    is not None
+                ):
+                    self.embed["game_info"]["notes"].append(
+                        "⚠️ Default user profile in use, consider creating a custom one."
+                    )
+
                 controllers_regex = re.compile(r"Hid Configure: ([^\r\n]+)")
                 controllers = re.findall(controllers_regex, log_file)
                 if controllers:
