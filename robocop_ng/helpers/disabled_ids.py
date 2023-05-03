@@ -114,7 +114,9 @@ def remove_disabled_build_id(bot, build_id: str) -> bool:
     return False
 
 
-def add_disabled_ro_section(bot, note: str, ro_section: dict[str, Union[str, list[str]]]) -> bool:
+def add_disabled_ro_section(
+    bot, note: str, ro_section: dict[str, Union[str, list[str]]]
+) -> bool:
     disabled_ids = get_disabled_ids(bot)
     note = note.lower()
     if note not in disabled_ids["ro_section"].keys():
