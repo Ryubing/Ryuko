@@ -982,7 +982,7 @@ class LogFileReader(Cog):
         ]
     )
     async def disable_ro_section(
-        self, ctx: Context, note: str, ro_section_snippet: str
+        self, ctx: Context, note: str, *, ro_section_snippet: str
     ):
         ro_section_snippet = ro_section_snippet.strip("`").splitlines()
         ro_section_snippet = [

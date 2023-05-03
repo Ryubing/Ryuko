@@ -54,12 +54,15 @@ def is_build_id_disabled(bot, build_id: str) -> bool:
     return build_id in disabled_ids["build_id"].keys()
 
 
-def is_ro_section_disabled(bot, ro_section: dict[str, str]) -> bool:
+def is_ro_section_disabled(bot, ro_section: dict[str, Union[str, list[str]]]) -> bool:
     disabled_ids = get_disabled_ids(bot)
     matches = []
     for note, entry in disabled_ids["ro_section"].items():
         for key, content in entry.items():
-            matches.append(ro_section[key].lower() == content.lower())
+            if key == "module":
+                matches.append(ro_section[key].lower() == content.lower())
+            else:
+                matches.append(ro_section[key] == content)
         if all(matches):
             return True
         else:
@@ -111,13 +114,16 @@ def remove_disabled_build_id(bot, build_id: str) -> bool:
     return False
 
 
-def add_disabled_ro_section(bot, note: str, ro_section: dict[str, str]) -> bool:
+def add_disabled_ro_section(bot, note: str, ro_section: dict[str, Union[str, list[str]]]) -> bool:
     disabled_ids = get_disabled_ids(bot)
     note = note.lower()
     if note not in disabled_ids["ro_section"].keys():
         disabled_ids["ro_section"][note] = {}
         for key, content in ro_section.items():
-            disabled_ids["ro_section"][note][key] = content.lower()
+            if key == "module":
+                disabled_ids["ro_section"][note][key] = content.lower()
+            else:
+                disabled_ids["ro_section"][note][key] = content
         set_disabled_ids(bot, disabled_ids)
         return True
     return False
