@@ -56,18 +56,18 @@ class Meme(Cog):
                 f"({fahrenheit}°F, {kelvin}K)."
             )
 
-    @commands.check(check_if_staff_or_ot)
-    @commands.command(hidden=True, name="lick")
-    async def licky(self, ctx, user: Optional[discord.Member]):
-        """licks a user :?"""
-        if user is None and ctx.message.reference is None:
-            await ctx.send(f"{ctx.author.mention} licks their lips! 👅")
-        else:
-            if user is None:
-                user = (
-                    await ctx.channel.fetch_message(ctx.message.reference.message_id)
-                ).author
-            await ctx.send(f"{user.mention} has been licked! 👅")
+@commands.check(check_if_staff_or_ot)
+@commands.command(hidden=True, name="lick")
+async def licky(self, ctx, user: Optional[discord.Member]):
+    """licks a user :?"""
+    if user is None and ctx.message.reference is None:
+        await ctx.send(f"{ctx.author.mention} licks their lips! 👅")
+    else:
+        if user is None:
+            user = (
+                await ctx.channel.fetch_message(ctx.message.reference.message_id)
+            ).author
+        await ctx.send(f"{user.mention} has been licked! 👅")
             
     @commands.check(check_if_staff_or_ot)
     @commands.command(hidden=True, name="chill", aliases=["cold"])
