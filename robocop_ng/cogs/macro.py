@@ -133,10 +133,14 @@ class Macro(Cog):
         macros = get_macros_dict(self.bot)
         if len(macros["macros"]) > 0:
             messages = []
-            num_messages = len(macros["macros"]) // 50 if len(macros["macros"]) > 50 else 1
+            num_messages = (
+                len(macros["macros"]) // 50 if len(macros["macros"]) > 50 else 1
+            )
             message = ""
 
-            for index, key in zip(range(len(macros["macros"])), sorted(macros["macros"].keys())):
+            for index, key in zip(
+                range(len(macros["macros"])), sorted(macros["macros"].keys())
+            ):
                 if index == 0 or index + 1 % 50 == 0:
                     if len(message) > 0:
                         messages.append(message)
