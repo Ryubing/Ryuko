@@ -132,9 +132,15 @@ class Macro(Cog):
     async def list_macros(self, ctx: Context, macros_only=False):
         macros = get_macros_dict(self.bot)
         if len(macros["macros"]) > 0:
-            message = "📝 **Macros**:\n"
+            messages = []
+            num_messages = len(macros["macros"]) // 50 if len(macros["macros"]) > 50 else 1
+            message = ""
 
-            for key in sorted(macros["macros"].keys()):
+            for index, key in zip(range(len(macros["macros"])), sorted(macros["macros"].keys())):
+                if index == 0 or index + 1 % 50 == 0:
+                    if len(message) > 0:
+                        messages.append(message)
+                    message = f"📝 **Macros** ({len(messages) + 1}/{num_messages}):\n"
                 message += f"- {key}\n"
                 if not macros_only and key in macros["aliases"].keys():
                     message += "  - __aliases__: "
@@ -147,7 +153,11 @@ class Macro(Cog):
                         message += f", {alias}"
                     message += "\n"
 
-            await ctx.send(message)
+            # Add the last message as well
+            messages.append(message)
+
+            for msg in messages:
+                await ctx.send(msg)
         else:
             await ctx.send("Couldn't find any macros.")
 
