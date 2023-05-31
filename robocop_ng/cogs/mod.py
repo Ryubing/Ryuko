@@ -886,6 +886,16 @@ class Mod(Cog):
             # Send to the desired channel
             await channelTo.send(embed=embedMessage)
 
+    @commands.guild_only()
+    @commands.check(check_if_staff)
+    @commands.command()
+    async def setdelay(ctx, seconds: int):
+        if seconds => 21600 or seconds <= 0:
+            return await ctx.send("Seconds can't be above '21600' or less then '0'")
+
+        await ctx.channel.edit(slowmode_delay=seconds)
+        await ctx.send(f"Set the slowmode delay in this channel to {seconds} seconds!")
+
 
 async def setup(bot):
     await bot.add_cog(Mod(bot))
