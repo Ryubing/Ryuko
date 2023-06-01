@@ -888,9 +888,9 @@ class Mod(Cog):
 
     @commands.guild_only()
     @commands.check(check_if_staff)
-    @commands.command()
-    async def setdelay(ctx, seconds: int):
-        if seconds => 21600 or seconds <= 0:
+    @commands.command(aliases=["slow"])
+    async def slowmode(self, ctx, seconds: int):
+        if seconds > 21600 or seconds < 0:
             return await ctx.send("Seconds can't be above '21600' or less then '0'")
 
         await ctx.channel.edit(slowmode_delay=seconds)
