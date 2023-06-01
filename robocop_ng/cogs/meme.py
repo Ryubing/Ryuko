@@ -57,8 +57,8 @@ class Meme(Cog):
             )
 
     @commands.check(check_if_staff_or_ot)
-    @commands.command(hidden=True, name="lick")
-    async def licky(self, ctx, user: Optional[discord.Member]):
+    @commands.command(hidden=True)
+    async def lick(self, ctx, user: Optional[discord.Member]):
         """licks a user :?"""
         if user is None and ctx.message.reference is None:
             await ctx.send(f"{ctx.author.mention} licks their lips! 👅")
