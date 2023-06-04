@@ -210,15 +210,20 @@ class LogAnalyser:
 
                 case "ram":
                     ram_match = re.search(
-                        r"RAM:\s(Total)?\s([^;\n\r]*)\s;\s(Available)?\s(\d+)",
+                        r"RAM: Total ([\d.]+) (MiB|GB) ; Available ([\d.]+) (MiB|GB)",
                         self._log_text,
                         re.MULTILINE,
                     )
-                    if ram_match is not None and ram_match.group(2) is not None:
-                        self._hardware_info[setting] = ram_match.group(2).rstrip()
-                        ram_available = ram_match.group(4).rstrip()
-                        if ram_available.isnumeric():
+                    if ram_match is not None:
+                        try:
+                            ram_available = float(ram_match.group(3))
+                            if ram_match.group(4) == "GB":
+                                ram_available *= 1024
+
+                            self._hardware_info[setting] = f"{ram_match.group(1)} {ram_match.group(2)}"
                             self._ram_available_mib = int(ram_available)
+                        except ValueError:
+                            pass  # ram_match.group(3) couldn't be parsed as a float. Ignore the error and carry on.
 
                 case "os":
                     os_match = re.search(
