@@ -223,7 +223,9 @@ class LogAnalyser:
                             self._hardware_info[setting] = f"{ram_match.group(1)} {ram_match.group(2)}"
                             self._ram_available_mib = int(ram_available)
                         except ValueError:
-                            pass  # ram_match.group(3) couldn't be parsed as a float. Ignore the error and carry on.
+                            # ram_match.group(3) couldn't be parsed as a float.
+                            self._hardware_info[setting] = "Error"
+                            self._ram_available_mib = -1
 
                 case "os":
                     os_match = re.search(
