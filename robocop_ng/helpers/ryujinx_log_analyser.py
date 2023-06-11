@@ -65,19 +65,16 @@ class LogAnalyser:
     def get_app_info(
         log_file: str,
     ) -> Optional[tuple[str, str, str, list[str], dict[str, str]]]:
-        game_name_match = re.search(
+        game_name_match = re.findall(
             r"Loader [A-Za-z]*: Application Loaded:\s([^;\n\r]*)",
             log_file,
             re.MULTILINE,
         )
-        if game_name_match is not None and len(game_name_match.groups()) > 0:
-            game_name = None
-            app_id = None
-            if game_name_match.group(1) is not None:
-                game_name = game_name_match.group(1).rstrip()
-                app_id_match = re.match(r".* \[([a-zA-Z0-9]*)\]", game_name)
-                if app_id_match:
-                    app_id = app_id_match.group(1).strip().upper()
+        if game_name_match:
+            game_name = game_name_match[-1].rstrip()
+            app_id_match = re.match(r".* \[([a-zA-Z0-9]*)\]", game_name)
+            if app_id_match:
+                app_id = app_id_match.group(1).strip().upper()
             bids_match = re.search(
                 r"Build ids found for title ([a-zA-Z0-9]*):[\n\r]*(.*)",
                 log_file,
@@ -384,13 +381,13 @@ class LogAnalyser:
             self._game_info["cheats"] = "\n".join(cheats)
 
     def __get_app_name(self):
-        app_match = re.search(
+        app_match = re.findall(
             r"Loader [A-Za-z]*: Application Loaded:\s([^;\n\r]*)",
             self._log_text,
             re.MULTILINE,
         )
-        if app_match is not None and app_match.group(1) is not None:
-            self._game_info["game_name"] = app_match.group(1).rstrip()
+        if app_match:
+            self._game_info["game_name"] = app_match[-1].rstrip()
 
     def __get_controller_notes(self):
         controllers_regex = re.compile(r"Hid Configure: ([^\r\n]+)")
