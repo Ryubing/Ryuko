@@ -12,7 +12,7 @@ python = "^3.8"
 python-dateutil = "^2.8.2"
 humanize = "^4.7.0"
 parsedatetime = "^2.6"
-aiohttp = "^3.8.4"
+aiohttp = "^3.8.6"
 gidgethub = "^5.3.0"
 "discord.py" = "^2.3.2"
 
