@@ -55,7 +55,7 @@ If you're moving from Kurisu/Robocop, and want to preserve your data, you'll wan
 
 ## Contributing
 
-Contributions are welcome. If you're unsure if your PR would be merged or not, ask in the Ryujinx discord server pinging Berry.
+Contributions are welcome. If you're unsure if your PR would be merged or not, ask in the Ryujinx discord pinging Berry.
 
 You're expected to use [black](https://github.com/psf/black) for code formatting before sending a PR. Simply install it with pip (`pip3 install black`), and run it with `black .`.
 
