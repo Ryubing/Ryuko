@@ -65,7 +65,7 @@ You're expected to use [black](https://github.com/psf/black) for code formatting
 
 Ryuko-NG is a fork of Robocop-NG that is mainly maintained by [@TSRBerry](https://github.com/TSRBerry).
 
-Robocop-NG was initially developed by [@aveao](https://github.com/aveao) and @tumGER. It is currently maintained by [@aveao](https://github.com/aveao). Similarly, the official robocop-ng on reswitched discord guild is hosted by @aveao too.
+Robocop-NG was initially developed by [@aveao](https://github.com/aveao) and @tumGER. It is currently maintained by [@aveao](https://github.com/aveao). Similarly, the official robocop-ng on reswitched discord guild is hosted by [@aveao](https://github.com/aveao) too.
 
 I would like to thank the following, in no particular order:
 
