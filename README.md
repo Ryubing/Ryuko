@@ -36,7 +36,7 @@ For updates I just `git pull;docker rm -f robocop_ng` then run the two commands 
 ### Running manually
 
 - Install python3.8+.
-- Install python dependencies (`pip3 install -Ur requirements.txt`, you might need to put `sudo -H` before that). You can also install with [poetry](https://python-poetry.org/) with just `poetry install`.
+- Install [poetry](https://python-poetry.org/) with `poetry install`.
 - Run `robocop_ng/__main__.py` (`cd robocop_ng;python3 __main__.py`).
 
 To keep the bot running, you might want to use pm2 or a systemd service.
