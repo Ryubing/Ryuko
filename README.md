@@ -20,7 +20,7 @@ You can see the migration instructions for your cogs here: https://discordpy.rea
 
 ## How to run
 
-- Copy the contents of `robocop_ng/config_template.py` to `robocop_ng/config.py` and make sure to configure all necessary parts to your server.
+- Copy `robocop_ng/config_template.py` to `robocop_ng/config.py` and make sure to configure all necessary parts for your server.
 - Enable all privileged intents ([guide here](https://discordpy.readthedocs.io/en/latest/intents.html?highlight=intents#privileged-intents)) for the bot. You don't need to give Discord your passport as Robocop-NG is not designed to run in >1 guild at once, let alone >100.
 - (obviously) Add the bot to your guild. There are many resources about this online.
 - If you haven't already done this already, **move the bot's role above the roles it'll need to manage, or else it won't function properly**, this is especially important for verification as it doesn't work otherwise.
