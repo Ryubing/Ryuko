@@ -24,19 +24,19 @@ You can see the migration instructions for your cogs here: https://discordpy.rea
 - Enable all privileged intents ([guide here](https://discordpy.readthedocs.io/en/latest/intents.html?highlight=intents#privileged-intents)) for the bot. You don't need to give Discord your passport as Robocop-NG is not designed to run in >1 guild at once, let alone >100.
 - (obviously) Add the bot to your guild. There are many resources about this online.
 - If you haven't already done this already, **move the bot's role above the roles it'll need to manage, or else it won't function properly**, this is especially important for verification as it doesn't work otherwise.
-- If you're moving from Kurisu or Robocop: Follow `Tips for people moving from Kurisu/Robocop` below.
+- If you're moving from Kurisu or Robocop: Follow [Tips for people moving from Kurisu/Robocop](https://github.com/GabCoolDude/ryuko-ng-readme/blob/master/README.md#tips-for-people-moving-from-kurisurobocop) below.
 
 ### Running with docker
 
 - `docker build . -t robocopng`
 - Assuming your robocop-ng repo is on `~/docker/`: `docker run --restart=always -v ~/docker/robocop-ng:/usr/src/app --name robocop_ng robocopng:latest`
 
-For updates I just `git pull;docker rm -f robocop_ng` then run the two commands above again.
+For updates, you can just `git pull;docker rm -f robocop_ng` then run the two commands above again.
 
 ### Running manually
 
 - Install python3.8+.
-- Install [poetry](https://python-poetry.org/) with `poetry install`.
+- Install dependencies with [poetry](https://python-poetry.org/) using `poetry install`.
 - Run `robocop_ng/__main__.py` (`cd robocop_ng;python3 __main__.py`).
 
 To keep the bot running, you might want to use pm2 or a systemd service.
