@@ -221,10 +221,14 @@ class LogAnalyser:
                             dest_unit = Size.MiB
 
                             ram_available = float(ram_match.group(3))
-                            ram_available = Size.from_name(ram_match.group(4)).convert(ram_available, dest_unit)
+                            ram_available = Size.from_name(ram_match.group(4)).convert(
+                                ram_available, dest_unit
+                            )
 
                             ram_total = float(ram_match.group(1))
-                            ram_total = Size.from_name(ram_match.group(2)).convert(ram_total, dest_unit)
+                            ram_total = Size.from_name(ram_match.group(2)).convert(
+                                ram_total, dest_unit
+                            )
 
                             self._hardware_info[
                                 setting
