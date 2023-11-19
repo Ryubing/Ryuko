@@ -3,6 +3,7 @@ from enum import IntEnum, auto
 from typing import Optional, Union
 
 from robocop_ng.helpers.disabled_ids import is_build_id_valid
+from robocop_ng.helpers.size import Size
 
 
 class CommonErrors(IntEnum):
@@ -209,24 +210,25 @@ class LogAnalyser:
                         self._hardware_info[setting] = cpu_match.group(1).rstrip()
 
                 case "ram":
+                    sizes = "|".join(Size.names())
                     ram_match = re.search(
-                        r"RAM: Total ([\d.]+) (MiB|GB) ; Available ([\d.]+) (MiB|GB)",
+                        rf"RAM: Total ([\d.]+) ({sizes}) ; Available ([\d.]+) ({sizes})",
                         self._log_text,
                         re.MULTILINE,
                     )
                     if ram_match is not None:
                         try:
+                            dest_unit = Size.MiB
+
                             ram_available = float(ram_match.group(3))
-                            if ram_match.group(4) == "GB":
-                                ram_available *= 1024
+                            ram_available = Size.from_name(ram_match.group(4)).convert(ram_available, dest_unit)
 
                             ram_total = float(ram_match.group(1))
-                            if ram_match.group(2) == "GB":
-                                ram_total *= 1024
+                            ram_total = Size.from_name(ram_match.group(2)).convert(ram_total, dest_unit)
 
                             self._hardware_info[
                                 setting
-                            ] = f"{ram_available}/{ram_total} MiB"
+                            ] = f"{ram_available:.0f}/{ram_total:.0f} {dest_unit.name}"
                         except ValueError:
                             # ram_match.group(1) or ram_match.group(3) couldn't be parsed as a float.
                             self._hardware_info[setting] = "Error"
