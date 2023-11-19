@@ -6,7 +6,7 @@ from robocop_ng.helpers.disabled_ids import is_build_id_valid
 from robocop_ng.helpers.size import Size
 
 
-class CommonErrors(IntEnum):
+class CommonError(IntEnum):
     SHADER_CACHE_COLLISION = auto()
     DUMP_HASH = auto()
     SHADER_CACHE_CORRUPTION = auto()
@@ -502,36 +502,36 @@ class LogAnalyser:
     def __get_notes(self):
         for common_error in self.get_common_errors():
             match common_error:
-                case CommonErrors.SHADER_CACHE_COLLISION:
+                case CommonError.SHADER_CACHE_COLLISION:
                     self._notes.append(
                         "⚠️ Cache collision detected. Investigate possible shader cache issues"
                     )
-                case CommonErrors.SHADER_CACHE_CORRUPTION:
+                case CommonError.SHADER_CACHE_CORRUPTION:
                     self._notes.append(
                         "⚠️ Cache corruption detected. Investigate possible shader cache issues"
                     )
-                case CommonErrors.DUMP_HASH:
+                case CommonError.DUMP_HASH:
                     self._notes.append(
                         "⚠️ Dump error detected. Investigate possible bad game/firmware dump issues"
                     )
-                case CommonErrors.UPDATE_KEYS:
+                case CommonError.UPDATE_KEYS:
                     self._notes.append(
                         "⚠️ Keys or firmware out of date, consider updating them"
                     )
-                case CommonErrors.FILE_PERMISSIONS:
+                case CommonError.FILE_PERMISSIONS:
                     self._notes.append(
                         "⚠️ File permission error. Consider deleting save directory and allowing Ryujinx to make a new one"
                     )
-                case CommonErrors.FILE_NOT_FOUND:
+                case CommonError.FILE_NOT_FOUND:
                     self._notes.append(
                         "⚠️ Save not found error. Consider starting game without a save file or using a new save file⚠️ Save not found error. Consider starting game without a save file or using a new save file"
                     )
-                case CommonErrors.MISSING_SERVICES:
+                case CommonError.MISSING_SERVICES:
                     if self._settings["ignore_missing_services"] == "False":
                         self._notes.append(
                             "⚠️ Consider enabling `Ignore Missing Services` in Ryujinx settings"
                         )
-                case CommonErrors.VULKAN_OUT_OF_MEMORY:
+                case CommonError.VULKAN_OUT_OF_MEMORY:
                     if self._settings["texture_recompression"] == "Disabled":
                         self._notes.append(
                             "⚠️ Consider enabling `Texture Recompression` in Ryujinx settings"
@@ -593,11 +593,11 @@ class LogAnalyser:
     def get_last_error(self) -> Optional[list[str]]:
         return self._log_errors[-1] if len(self._log_errors) > 0 else None
 
-    def get_common_errors(self) -> list[CommonErrors]:
+    def get_common_errors(self) -> list[CommonError]:
         errors = []
 
         if self.contains_errors(["Cache collision found"], self._log_errors):
-            errors.append(CommonErrors.SHADER_CACHE_COLLISION)
+            errors.append(CommonError.SHADER_CACHE_COLLISION)
         if self.contains_errors(
             [
                 "ResultFsInvalidIvfcHash",
@@ -605,7 +605,7 @@ class LogAnalyser:
             ],
             self._log_errors,
         ):
-            errors.append(CommonErrors.DUMP_HASH)
+            errors.append(CommonError.DUMP_HASH)
         if self.contains_errors(
             [
                 "Ryujinx.Graphics.Gpu.Shader.ShaderCache.Initialize()",
@@ -614,17 +614,17 @@ class LogAnalyser:
             ],
             self._log_errors,
         ):
-            errors.append(CommonErrors.SHADER_CACHE_CORRUPTION)
+            errors.append(CommonError.SHADER_CACHE_CORRUPTION)
         if self.contains_errors(["MissingKeyException"], self._log_errors):
-            errors.append(CommonErrors.UPDATE_KEYS)
+            errors.append(CommonError.UPDATE_KEYS)
         if self.contains_errors(["ResultFsPermissionDenied"], self._log_errors):
-            errors.append(CommonErrors.FILE_PERMISSIONS)
+            errors.append(CommonError.FILE_PERMISSIONS)
         if self.contains_errors(["ResultFsTargetNotFound"], self._log_errors):
-            errors.append(CommonErrors.FILE_NOT_FOUND)
+            errors.append(CommonError.FILE_NOT_FOUND)
         if self.contains_errors(["ServiceNotImplementedException"], self._log_errors):
-            errors.append(CommonErrors.MISSING_SERVICES)
+            errors.append(CommonError.MISSING_SERVICES)
         if self.contains_errors(["ErrorOutOfDeviceMemory"], self._log_errors):
-            errors.append(CommonErrors.VULKAN_OUT_OF_MEMORY)
+            errors.append(CommonError.VULKAN_OUT_OF_MEMORY)
 
         return errors
 
