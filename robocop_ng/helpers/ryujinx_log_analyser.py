@@ -230,9 +230,9 @@ class LogAnalyser:
                                 ram_total, dest_unit
                             )
 
-                            self._hardware_info[
-                                setting
-                            ] = f"{ram_available:.0f}/{ram_total:.0f} {dest_unit.name}"
+                            self._hardware_info[setting] = (
+                                f"{ram_available:.0f}/{ram_total:.0f} {dest_unit.name}"
+                            )
                         except ValueError:
                             # ram_match.group(1) or ram_match.group(3) couldn't be parsed as a float.
                             self._hardware_info[setting] = "Error"
