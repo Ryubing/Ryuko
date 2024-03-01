@@ -6,6 +6,7 @@ import discord
 from discord.ext.commands import Cog
 
 from robocop_ng.helpers.checks import check_if_staff
+from robocop_ng.helpers.invites import get_invites, set_invites
 from robocop_ng.helpers.restrictions import get_user_restrictions
 from robocop_ng.helpers.userlogs import get_userlog
 
@@ -17,7 +18,6 @@ class Logs(Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.invites_json_path = os.path.join(self.bot.state_dir, "data/invites.json")
         self.invite_re = re.compile(
             r"((discord\.gg|discordapp\.com/" r"+invite)/+[a-zA-Z0-9-]+)", re.IGNORECASE
         )
@@ -41,8 +41,7 @@ class Logs(Cog):
         escaped_name = self.bot.escape_message(member)
 
         # Attempt to correlate the user joining with an invite
-        with open(self.invites_json_path, "r") as f:
-            invites = json.load(f)
+        invites = get_invites(self.bot)
 
         real_invites = await member.guild.invites()
 
@@ -76,8 +75,7 @@ class Logs(Cog):
             del invites[id]
 
         # Save invites data.
-        with open(self.invites_json_path, "w") as f:
-            f.write(json.dumps(invites))
+        set_invites(self.bot, invites)
 
         # Prepare the invite correlation message
         if len(probable_invites_used) == 1:

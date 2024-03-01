@@ -2,7 +2,7 @@ import json
 import os.path
 import os
 
-from robocop_ng.helpers.notifications import report_critical_error
+from robocop_ng.helpers.data_loader import read_json
 
 
 def get_persistent_roles_path(bot):
@@ -10,20 +10,7 @@ def get_persistent_roles_path(bot):
 
 
 def get_persistent_roles(bot) -> dict[str, list[str]]:
-    if os.path.isfile(get_persistent_roles_path(bot)):
-        with open(get_persistent_roles_path(bot), "r") as f:
-            try:
-                return json.load(f)
-            except json.JSONDecodeError as e:
-                content = f.read()
-                report_critical_error(
-                    bot,
-                    e,
-                    additional_info={
-                        "file": {"length": len(content), "content": content}
-                    },
-                )
-    return {}
+    return read_json(bot, get_persistent_roles_path(bot))
 
 
 def set_persistent_roles(bot, contents: dict[str, list[str]]):
@@ -42,8 +29,5 @@ def add_user_roles(bot, uid: int, roles: list[int]):
 
 def get_user_roles(bot, uid: int) -> list[str]:
     uid = str(uid)
-    with open(get_persistent_roles_path(bot), "r") as f:
-        roles = json.load(f)
-        if uid in roles:
-            return roles[uid]
-        return []
+    persistent_roles = get_persistent_roles(bot)
+    return persistent_roles[uid] if uid in persistent_roles else []

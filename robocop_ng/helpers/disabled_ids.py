@@ -2,7 +2,7 @@ import json
 import os
 from typing import Union
 
-from robocop_ng.helpers.notifications import report_critical_error
+from robocop_ng.helpers.data_loader import read_json
 
 
 def get_disabled_ids_path(bot) -> str:
@@ -22,21 +22,8 @@ def is_ro_section_valid(ro_section: dict[str, str]) -> bool:
 
 
 def get_disabled_ids(bot) -> dict[str, dict[str, Union[str, dict[str, str]]]]:
-    if os.path.isfile(get_disabled_ids_path(bot)):
-        with open(get_disabled_ids_path(bot), "r") as f:
-            try:
-                disabled_ids = json.load(f)
-            except json.JSONDecodeError as e:
-                content = f.read()
-                report_critical_error(
-                    bot,
-                    e,
-                    additional_info={
-                        "file": {"length": len(content), "content": content}
-                    },
-                )
-                return {}
-
+    disabled_ids = read_json(bot, get_disabled_ids_path(bot))
+    if len(disabled_ids) > 0:
         # Migration code
         if "app_id" in disabled_ids.keys():
             old_disabled_ids = disabled_ids.copy()
@@ -54,9 +41,7 @@ def get_disabled_ids(bot) -> dict[str, dict[str, Union[str, dict[str, str]]]]:
                 disabled_ids[key.lower()]["ro_section"] = value
             set_disabled_ids(bot, disabled_ids)
 
-        return disabled_ids
-
-    return {}
+    return disabled_ids
 
 
 def set_disabled_ids(bot, contents: dict[str, dict[str, Union[str, dict[str, str]]]]):

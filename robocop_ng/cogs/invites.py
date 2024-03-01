@@ -6,12 +6,12 @@ from discord.ext import commands
 from discord.ext.commands import Cog
 
 from robocop_ng.helpers.checks import check_if_collaborator
+from robocop_ng.helpers.invites import add_invite
 
 
 class Invites(Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.invites_json_path = os.path.join(self.bot.state_dir, "data/invites.json")
 
     @commands.command()
     @commands.guild_only()
@@ -24,18 +24,7 @@ class Invites(Cog):
             max_age=0, max_uses=1, temporary=True, unique=True, reason=reason
         )
 
-        with open(self.invites_json_path, "r") as f:
-            invites = json.load(f)
-
-        invites[invite.id] = {
-            "uses": 0,
-            "url": invite.url,
-            "max_uses": 1,
-            "code": invite.code,
-        }
-
-        with open(self.invites_json_path, "w") as f:
-            f.write(json.dumps(invites))
+        add_invite(self.bot, invite.id, invite.url, 1, invite.code)
 
         await ctx.message.add_reaction("🆗")
         try:
