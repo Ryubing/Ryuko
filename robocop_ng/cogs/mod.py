@@ -612,15 +612,30 @@ class Mod(Cog):
     @commands.command(aliases=["clear"])
     async def purge(self, ctx, limit: int, channel: discord.TextChannel = None):
         """Clears a given number of messages, staff only."""
-        log_channel = self.bot.get_channel(self.bot.config.modlog_channel)
+        modlog_channel = self.bot.get_channel(self.bot.config.modlog_channel)
+        log_channel = self.bot.get_channel(self.bot.config.log_channel)
         if not channel:
             channel = ctx.channel
-        await channel.purge(limit=limit)
+
+        purged_log_jump_url = ""
+        for deleted_message in await channel.purge(limit=limit):
+            msg = (
+                "🗑️ **Message purged**: \n"
+                f"from {self.bot.escape_message(deleted_message.author.name)} "
+                f"({deleted_message.author.id}), in {deleted_message.channel.mention}:\n"
+                f"`{deleted_message.clean_content}`"
+            )
+            if len(purged_log_jump_url) == 0:
+                purged_log_jump_url = (await log_channel.send(msg)).jump_url
+            else:
+                await log_channel.send(msg)
+
         msg = (
             f"🗑 **Purged**: {str(ctx.author)} purged {limit} "
             f"messages in {channel.mention}."
+            f"\n🔗 __Jump__: <{purged_log_jump_url}>"
         )
-        await log_channel.send(msg)
+        await modlog_channel.send(msg)
 
     @commands.guild_only()
     @commands.check(check_if_staff)
