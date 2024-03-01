@@ -22,7 +22,8 @@ class Macro(Cog):
     @commands.cooldown(3, 30, BucketType.user)
     @commands.command(aliases=["m"])
     async def macro(self, ctx: Context, key: str, targets: Greedy[discord.User] = None):
-        await ctx.message.delete()
+        if ctx.guild:
+            await ctx.message.delete()
         if len(key) > 0:
             text = get_macro(self.bot, key)
             if text is not None:
