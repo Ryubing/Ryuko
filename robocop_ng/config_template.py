@@ -38,6 +38,7 @@ initial_cogs = [
     "cogs.links",
     "cogs.remind",
     "cogs.robocronp",
+    "cogs.vanity_url",
     "cogs.meme",
     "cogs.invites",
     "cogs.yubicootp",
@@ -63,6 +64,9 @@ min_age = datetime.timedelta(minutes=15)
 
 # The bot will only work in these guilds
 guild_whitelist = [269333940928512010]  # ReSwitched discord
+
+# Custom invite URL codes
+vanity_codes = {269333940928512010: "reswitched"}
 
 # Named roles to be used with .approve and .revoke
 # Example: .approve User hacker
