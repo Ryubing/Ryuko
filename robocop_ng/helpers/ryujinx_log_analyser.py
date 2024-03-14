@@ -177,6 +177,7 @@ class LogAnalyser:
             "anisotropic_filtering": "Unknown",
             "aspect_ratio": "Unknown",
             "texture_recompression": "Unknown",
+            "hypervisor": "Unknown",
         }
         self._notes = set()
         self._log_errors = []
@@ -338,7 +339,7 @@ class LogAnalyser:
                 else:
                     return "Unknown"
 
-            case "pptc" | "shader_cache" | "texture_recompression" | "vsync":
+            case "pptc" | "shader_cache" | "texture_recompression" | "vsync" | "hypervisor":
                 return "Enabled" if value == "True" else "Disabled"
 
             case _:
@@ -361,6 +362,7 @@ class LogAnalyser:
             "shader_cache": "EnableShaderCache",
             "texture_recompression": "EnableTextureRecompression",
             "vsync": "EnableVsync",
+            "hypervisor": "UseHypervisor",
         }
 
         for key in self._settings.keys():
@@ -426,6 +428,13 @@ class LogAnalyser:
                 self._notes.add(
                     "**⚠️ AMD GPU users should consider using Vulkan graphics backend**"
                 )
+        if (
+            "MacOS" in self.__hardware_info["os"]
+            and self.__settings["hypervisor"] != "Enabled"
+        ):
+            self.__notes.add(
+                "**⚠️ Hypervisor disabled, consider changing into Enabled.**"
+            )
 
     def __get_log_notes(self):
         default_logs = ["Info", "Warning", "Error", "Guest"]
