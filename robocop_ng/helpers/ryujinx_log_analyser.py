@@ -173,11 +173,11 @@ class LogAnalyser:
             "pptc": "Unknown",
             "shader_cache": "Unknown",
             "vsync": "Unknown",
+            "hypervisor": "Unknown",
             "resolution_scale": "Unknown",
             "anisotropic_filtering": "Unknown",
             "aspect_ratio": "Unknown",
             "texture_recompression": "Unknown",
-            "hypervisor": "Unknown",
         }
         self._notes = set()
         self._log_errors = []
