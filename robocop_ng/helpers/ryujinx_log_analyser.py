@@ -429,12 +429,12 @@ class LogAnalyser:
                     "**⚠️ AMD GPU users should consider using Vulkan graphics backend**"
                 )
         if (
-            "MacOS" in self.__hardware_info["os"]
-            and self.__settings["hypervisor"] != "Enabled"
+            "mac" in self._hardware_info["os"]
         ):
-            self.__notes.add(
-                "**⚠️ Hypervisor disabled, consider changing into Enabled.**"
-            )
+            if self._settings["hypervisor"] != "Enabled":
+                self._notes.add(
+                    "**⚠️ Hypervisor disabled, consider changing to Enabled.**"
+                )
 
     def __get_log_notes(self):
         default_logs = ["Info", "Warning", "Error", "Guest"]
