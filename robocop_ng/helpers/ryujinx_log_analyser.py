@@ -135,8 +135,8 @@ class LogAnalyser:
             raise ValueError("No log entries found.")
 
         self.__get_errors()
-        self.__get_settings_info()
         self.__get_hardware_info()
+        self.__get_settings_info()
         self.__get_ryujinx_info()
         self.__get_app_name()
         self.__get_mods()
@@ -339,9 +339,14 @@ class LogAnalyser:
                 else:
                     return "Unknown"
 
-            case "pptc" | "shader_cache" | "texture_recompression" | "vsync" | "hypervisor":
+            case "pptc" | "shader_cache" | "texture_recompression" | "vsync":
                 return "Enabled" if value == "True" else "Disabled"
 
+            case "hypervisor":
+                if "mac" in self._hardware_info["os"]:
+                    return "Enabled" if value == "True" else "Disabled"
+                else:
+                    return "Not Applicable"
             case _:
                 return value
 
@@ -427,13 +432,6 @@ class LogAnalyser:
             if "AMD" in self._hardware_info["gpu"]:
                 self._notes.add(
                     "**⚠️ AMD GPU users should consider using Vulkan graphics backend**"
-                )
-        if (
-            "mac" in self._hardware_info["os"]
-        ):
-            if self._settings["hypervisor"] != "Enabled":
-                self._notes.add(
-                    "**⚠️ Hypervisor disabled, consider changing to Enabled.**"
                 )
 
     def __get_log_notes(self):
