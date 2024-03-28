@@ -373,11 +373,14 @@ class LogAnalyser:
         mods_regex = re.compile(r"Found\s(enabled|disabled)\smod\s\'(.+?)\'\s(\[.+?\])")
         matches = re.findall(mods_regex, self._log_text)
         if matches:
-            mods = [{"mod": match[1], "status": match[0], "type": match[2]} for match in matches]
+            mods = [
+                {"mod": match[1], "status": match[0], "type": match[2]}
+                for match in matches
+            ]
             mods_status = [
                 f"ℹ️ {i['mod']} ({'ExeFS' if i['type'] == '[E]' else 'RomFS'})"
                 for i in mods
-                if i['status'] == 'enabled'
+                if i["status"] == "enabled"
             ]
             # Remove duplicated mods from output
             mods_status = list(dict.fromkeys(mods_status))
