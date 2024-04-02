@@ -370,7 +370,9 @@ class LogAnalyser:
                 raise NotImplementedError(key)
 
     def __get_mods(self):
-        mods_regex = re.compile(r"Found\s(enabled|disabled)?\s?mod\s\'(.+?)\'\s(\[.+?\])")
+        mods_regex = re.compile(
+            r"Found\s(enabled|disabled)?\s?mod\s\'(.+?)\'\s(\[.+?\])"
+        )
         matches = re.findall(mods_regex, self._log_text)
         if matches:
             mods = [
