@@ -543,7 +543,7 @@ class LogAnalyser:
                 case _:
                     raise NotImplementedError(common_error)
 
-        timestamp_regex = re.compile(r"\d{2}:\d{2}:\d{2}\.\d{3}")
+        timestamp_regex = re.compile(r"(\d{2}:\d{2}:\d{2}\.\d{3})\s+?\|")
         latest_timestamp = re.findall(timestamp_regex, self._log_text)[-1]
         if latest_timestamp:
             timestamp_message = f"ℹ️ Time elapsed: `{latest_timestamp}`"
