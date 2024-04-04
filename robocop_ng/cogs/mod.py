@@ -914,11 +914,12 @@ class Mod(Cog):
     @commands.guild_only()
     @commands.check(check_if_staff)
     @commands.command(aliases=["slow"])
-    async def slowmode(self, ctx, seconds: int):
+    async def slowmode(self, ctx, seconds: int, channel: discord.TextChannel or ctx.channel):
         if seconds > 21600 or seconds < 0:
             return await ctx.send("Seconds can't be above '21600' or less then '0'")
+            
 
-        await ctx.channel.edit(slowmode_delay=seconds)
+        await channel.edit(slowmode_delay=seconds, reason=f"{str(ctx.author)} set the slowmode")
         await ctx.send(f"Set the slowmode delay in this channel to {seconds} seconds!")
 
 
