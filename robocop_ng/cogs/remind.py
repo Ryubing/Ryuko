@@ -39,8 +39,15 @@ class Remind(Cog):
     @commands.command(aliases=["remindme"])
     async def remind(self, ctx, when: str, *, text: str = "something"):
         """Reminds you about something."""
+        ref_message = None
+        if ctx.message.reference is not None:
+            ref_message = await ctx.channel.fetch_message(
+                ctx.message.reference.message_id
+            )
+
         if ctx.guild:
             await ctx.message.delete()
+
         current_timestamp = time.time()
         expiry_timestamp = self.bot.parse_time(when)
 
@@ -58,6 +65,9 @@ class Remind(Cog):
         )
 
         safe_text = await commands.clean_content().convert(ctx, str(text))
+        if ref_message is not None:
+            safe_text += f"\nMessage reference: {ref_message.jump_url}"
+
         added_on = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S (UTC)")
 
         add_job(
