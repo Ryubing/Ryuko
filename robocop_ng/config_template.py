@@ -38,7 +38,6 @@ initial_cogs = [
     "cogs.links",
     "cogs.remind",
     "cogs.robocronp",
-    "cogs.vanity_url",
     "cogs.meme",
     "cogs.invites",
     "cogs.yubicootp",
