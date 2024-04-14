@@ -68,12 +68,10 @@ class Remind(Cog):
             expiry_timestamp,
         )
 
-        msg = await ctx.send(
+        await ctx.send(
             f"{ctx.author.mention}: I'll remind you in "
             f"DMs about `{safe_text}` in {duration_text}."
         )
-        await asyncio.sleep(5)
-        await msg.delete()
 
 
 async def setup(bot):
