@@ -346,7 +346,7 @@ class LogAnalyser:
                 if "mac" in self._hardware_info["os"]:
                     return "Enabled" if value == "True" else "Disabled"
                 else:
-                    return "Not Applicable"
+                    return "N/A"
             case _:
                 return value
 
