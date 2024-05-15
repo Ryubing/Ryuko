@@ -144,6 +144,7 @@ class LogFileReader(Cog):
                 f"**PPTC Cache:** `{analysed_log['settings']['pptc']}`",
                 f"**Shader Cache:** `{analysed_log['settings']['shader_cache']}`",
                 f"**V-Sync:** `{analysed_log['settings']['vsync']}`",
+                f"**Hypervisor:** `{analysed_log['settings']['hypervisor']}`",
             )
         )
 
