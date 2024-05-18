@@ -397,7 +397,10 @@ class LogAnalyser:
             self._game_info["mods"] = "\n".join(mods_status)
 
     def __get_cheats(self):
-        cheat_regex = re.compile(r"Tampering program\s<(.+)>")
+        # Make sure to skip cheats which fail to compile
+        cheat_regex = re.compile(
+            r"Installing cheat\s'(.+)'(?!\s\d{2}:\d{2}:\d{2}\.\d{3}\s\|E\|\sTamperMachine\sCompile)"
+        )
         matches = re.findall(cheat_regex, self._log_text)
         if matches:
             cheats = [f"ℹ️ {match}" for match in matches]
