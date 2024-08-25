@@ -443,6 +443,12 @@ class LogAnalyser:
                     "**⚠️ AMD GPU users should consider using Vulkan graphics backend**"
                 )
 
+    def __get_cpu_notes(self):
+        if "Virtual Apple" in self._hardware_info["cpu"]:
+                self._notes.add(
+                    "🔴 **Rosetta should be disabled**"
+                )
+
     def __get_log_notes(self):
         default_logs = ["Info", "Warning", "Error", "Guest"]
         user_logs = []
@@ -572,6 +578,7 @@ class LogAnalyser:
 
         self.__get_controller_notes()
         self.__get_os_notes()
+        self.__get_cpu_notes()
 
         if (
             self._emu_info["ryu_firmware"] == "Unknown"
