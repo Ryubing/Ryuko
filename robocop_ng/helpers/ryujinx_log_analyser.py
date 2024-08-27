@@ -445,9 +445,7 @@ class LogAnalyser:
 
     def __get_cpu_notes(self):
         if "VirtualApple" in self._hardware_info["cpu"]:
-                self._notes.add(
-                    "🔴 **Rosetta should be disabled**"
-                )
+            self._notes.add("🔴 **Rosetta should be disabled**")
 
     def __get_log_notes(self):
         default_logs = ["Info", "Warning", "Error", "Guest"]
