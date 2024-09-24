@@ -88,7 +88,7 @@ class LogAnalyser:
             else:
                 app_id = ""
             bids_match_all = re.findall(
-                r"Build ids found for title ([a-zA-Z0-9]*):[\n\r]*((?:\s+.*[\n\r]+)+)",
+                r"Build ids found for (?:title|application) ([a-zA-Z0-9]*):[\n\r]*((?:\s+.*[\n\r]+)+)",
                 log_file,
             )
             if bids_match_all and len(bids_match_all) > 0:
