@@ -175,12 +175,12 @@ class LogFileReader(Cog):
         )
         analysed_log["game_info"]["game_name"] = cleaned_game_name
 
-        hardware_info = " | ".join(
+        hardware_info = "\n".join(
             (
+                f"**OS:** {analysed_log['hardware_info']['os']}",
                 f"**CPU:** {analysed_log['hardware_info']['cpu']}",
                 f"**GPU:** {analysed_log['hardware_info']['gpu']}",
                 f"**RAM:** {analysed_log['hardware_info']['ram']}",
-                f"**OS:** {analysed_log['hardware_info']['os']}",
             )
         )
 
@@ -216,7 +216,7 @@ class LogFileReader(Cog):
         log_embed.set_footer(text=f"Log uploaded by {author_name}")
         log_embed.add_field(
             name="General Info",
-            value=" | ".join((ryujinx_info, hardware_info)),
+            value="\n".join((ryujinx_info, hardware_info)),
             inline=False,
         )
         log_embed.add_field(

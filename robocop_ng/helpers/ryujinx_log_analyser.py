@@ -274,6 +274,9 @@ class LogAnalyser:
                         if "Ryujinx Version:" in line:
                             self._emu_info[setting] = line.split()[-1].strip()
                             break
+                        if "Ryujinx Canary Version:" in line:
+                            self._emu_info[setting] = "Canary " + line.split()[-1].strip()
+                            break
 
                 case "logs_enabled":
                     logs_match = re.search(

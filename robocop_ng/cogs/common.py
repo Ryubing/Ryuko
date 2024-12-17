@@ -123,7 +123,7 @@ class Common(Cog):
 
     def escape_message(self, text: str):
         """Escapes unfun stuff from messages"""
-        return str(text).replace("@", "@ ").replace("<#", "# ")
+        return str(text).replace("@", "@ ").replace("<#", "# ").replace("_", "\_")
 
     # This function is based on https://stackoverflow.com/a/35435419/3286892
     # by link2110 (https://stackoverflow.com/users/5890923/link2110)
