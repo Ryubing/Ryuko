@@ -19,8 +19,7 @@ class CommonError(IntEnum):
 
 class RyujinxVersion(IntEnum):
     MASTER = auto()
-    OLD_MASTER = auto()
-    LDN = auto()
+    CANARY = auto()
     MAC = auto()
     PR = auto()
     CUSTOM = auto()
@@ -601,19 +600,16 @@ class LogAnalyser:
 
     def get_ryujinx_version(self):
         mainline_version = re.compile(r"^\d\.\d\.\d+$")
-        old_mainline_version = re.compile(r"^\d\.\d\.(\d){4}$")
+        canary_version = re.compile(r"^Canary \d\.\d\.\d+$")
         pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
-        ldn_version = re.compile(r"^\d\.\d\.\d-ldn\d+\.\d+(?:\.\d+|$)")
         mac_version = re.compile(r"^\d\.\d\.\d-macos\d+(?:\.\d+(?:\.\d+|$)|$)")
 
         if re.match(mainline_version, self._emu_info["ryu_version"]):
             return RyujinxVersion.MASTER
-        elif re.match(old_mainline_version, self._emu_info["ryu_version"]):
-            return RyujinxVersion.OLD_MASTER
+        elif re.match(canary_version, self._emu_info["ryu_version"]):
+            return RyujinxVersion.CANARY
         elif re.match(mac_version, self._emu_info["ryu_version"]):
             return RyujinxVersion.MAC
-        elif re.match(ldn_version, self._emu_info["ryu_version"]):
-            return RyujinxVersion.LDN
         elif re.match(pr_version, self._emu_info["ryu_version"]):
             return RyujinxVersion.PR
         else:
