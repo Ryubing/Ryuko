@@ -21,7 +21,7 @@ import config
 
 script_name = os.path.basename(__file__).split(".")[0]
 
-log_file_name = f"{script_name}.log"
+log_file_name = state_dir + f"/{script_name}.log"
 
 # Limit of discord (non-nitro) is 8MB (not MiB)
 max_file_size = 1000 * 1000 * 8
