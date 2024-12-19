@@ -452,6 +452,9 @@ class LogAnalyser:
                     "**⚠️ AMD GPU users should consider using Vulkan graphics backend**"
                 )
 
+        if "macOS" in self._hardware_info["os"] and "Intel" in self._hardware_info["cpu"]:
+            self._notes.add("**⚠️ Intel Macs are not supported.**")
+
     def __get_cpu_notes(self):
         if "VirtualApple" in self._hardware_info["cpu"]:
             self._notes.add("🔴 **Rosetta should be disabled**")
