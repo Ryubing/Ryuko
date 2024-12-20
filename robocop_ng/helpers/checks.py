@@ -16,8 +16,8 @@ def check_if_bot_manager(ctx):
 def check_if_staff_or_ot(ctx):
     if not ctx.guild:
         return True
-    is_ot = ctx.channel.name == "off-topic"
-    is_bot_cmds = ctx.channel.name == "bot-cmds"
+    is_ot = ctx.channel.name == "general"
+    is_bot_cmds = ctx.channel.name == "bot-spam"
     is_staff = any(r.id in config.staff_role_ids for r in ctx.author.roles)
     return is_ot or is_staff or is_bot_cmds
 
