@@ -1,5 +1,5 @@
 import re
-from enum import IntEnum, auto
+from enum import IntEnum, auto, EnumType
 from typing import Optional, Union
 
 from robocop_ng.helpers.disabled_ids import is_build_id_valid
@@ -18,12 +18,10 @@ class CommonError(IntEnum):
 
 
 class RyujinxVersion(IntEnum):
-    MASTER = auto()
+    STABLE = auto()
     CANARY = auto()
-    MAC = auto()
     PR = auto()
     CUSTOM = auto()
-
 
 class LogAnalyser:
     _log_text: str
@@ -598,25 +596,25 @@ class LogAnalyser:
             self._notes.add(firmware_warning)
 
         self.__get_settings_notes()
-        if self.get_ryujinx_version() == RyujinxVersion.CUSTOM:
+        version_type, version_str = self.get_ryujinx_version()
+        if version_type == RyujinxVersion.CUSTOM:
             self._notes.add("**⚠️ Custom builds are not officially supported**")
 
-    def get_ryujinx_version(self):
+    def get_ryujinx_version(self) -> tuple[RyujinxVersion, str]:
         mainline_version = re.compile(r"^\d\.\d\.\d+$")
         canary_version = re.compile(r"^Canary \d\.\d\.\d+$")
         pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
-        mac_version = re.compile(r"^\d\.\d\.\d-macos\d+(?:\.\d+(?:\.\d+|$)|$)")
 
-        if re.match(mainline_version, self._emu_info["ryu_version"]):
-            return RyujinxVersion.MASTER
-        elif re.match(canary_version, self._emu_info["ryu_version"]):
-            return RyujinxVersion.CANARY
-        elif re.match(mac_version, self._emu_info["ryu_version"]):
-            return RyujinxVersion.MAC
-        elif re.match(pr_version, self._emu_info["ryu_version"]):
-            return RyujinxVersion.PR
+        version_data = self._emu_info["ryu_version"]
+
+        if re.match(mainline_version, version_data):
+            return RyujinxVersion.STABLE, version_data
+        elif re.match(canary_version, version_data):
+            return RyujinxVersion.CANARY, version_data.split(" ", maxsplit=2)[1]
+        elif re.match(pr_version, version_data):
+            return RyujinxVersion.PR, version_data
         else:
-            return RyujinxVersion.CUSTOM
+            return RyujinxVersion.CUSTOM, version_data
 
     def is_default_user_profile(self) -> bool:
         return (
@@ -684,7 +682,7 @@ class LogAnalyser:
             limit_cheats.append(f"✂️ {len(cheats) - 5} other cheats")
             self._game_info["cheats"] = "\n".join(limit_cheats)
 
-        if is_channel_allowed and self.get_ryujinx_version() == RyujinxVersion.PR:
+        if is_channel_allowed and self.get_ryujinx_version()[0] == RyujinxVersion.PR:
             self._notes.add(
                 f"**⚠️ PR build logs should be posted in <#{pr_channel}> if reporting bugs or tests**"
             )

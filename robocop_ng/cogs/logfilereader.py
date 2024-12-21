@@ -30,7 +30,7 @@ from robocop_ng.helpers.disabled_paths import (
     add_disabled_path,
     remove_disabled_path,
 )
-from robocop_ng.helpers.ryujinx_log_analyser import LogAnalyser
+from robocop_ng.helpers.ryujinx_log_analyser import LogAnalyser, RyujinxVersion
 
 logging.basicConfig(
     format="%(asctime)s (%(levelname)s) %(message)s (Line %(lineno)d)",
@@ -169,7 +169,7 @@ class LogFileReader(Cog):
         await message.delete()
         return embed
 
-    def format_analysed_log(self, author_name: str, analysed_log):
+    def format_analysed_log(self, author_name: str, analyser: LogAnalyser, analysed_log):
         cleaned_game_name = re.sub(
             r"\s\[(64|32)-bit\]$", "", analysed_log["game_info"]["game_name"]
         )
@@ -205,9 +205,16 @@ class LogFileReader(Cog):
             )
         )
 
+        version_type, version = analyser.get_ryujinx_version()
+
+        if version_type == RyujinxVersion.STABLE:
+            version = f"[{version}](https://github.com/GreemDev/Ryujinx/releases/tag/{version})"
+        elif version_type == RyujinxVersion.CANARY:
+            version = f"Canary [{version}](https://github.com/GreemDev/Ryujinx-Canary/releases/tag/{version})"
+
         ryujinx_info = " | ".join(
             (
-                f"**Version:** {analysed_log['emu_info']['ryu_version']}",
+                f"**Version:** {version}",
                 f"**Firmware:** {analysed_log['emu_info']['ryu_firmware']}",
             )
         )
@@ -328,6 +335,7 @@ class LogFileReader(Cog):
 
         return self.format_analysed_log(
             author_name,
+            analyser,
             analyser.analyse_discord(
                 is_channel_allowed,
                 self.bot.config.bot_log_allowed_channels["pr-testing"],
