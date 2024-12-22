@@ -604,8 +604,12 @@ class LogFileReader(Cog):
                 )
                 logging.warning(error)
             except Exception as error:
+                error_message = str(error)
+                if error_message is not "":
+                    error_message = ":\n\n" + error_message
+
                 await reply_message.edit(
-                    content=f"Error: Couldn't parse log; parser threw `{type(error).__name__}` exception."
+                    content=f"Error: Couldn't parse log; parser threw `{type(error).__name__}` exception{error_message}"
                 )
                 logging.warning(error)
         else:

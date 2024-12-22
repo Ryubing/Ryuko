@@ -1,4 +1,5 @@
 import re
+from argparse import ArgumentError
 from enum import IntEnum, auto, EnumType
 from typing import Optional, Union
 
@@ -17,9 +18,9 @@ class CommonError(IntEnum):
     VULKAN_OUT_OF_MEMORY = auto()
 
 
-class AndroidError(TypeError):
-    pass
-
+class LogDataError(RuntimeError):
+    def __init__(self, message: str):
+        self.add_note(message)
 
 class RyujinxVersion(IntEnum):
     STABLE = auto()
@@ -275,7 +276,7 @@ class LogAnalyser:
                         gpu = gpu_match.group(1).rstrip()
 
                         if "Mali" in gpu:
-                            raise AndroidError()
+                            raise LogDataError("Android is not supported.")
 
                         self._hardware_info[setting] = gpu
 
@@ -621,12 +622,11 @@ class LogAnalyser:
         if version_type == RyujinxVersion.CUSTOM:
             self._notes.add("**⚠️ Custom builds are not officially supported**")
         elif version_type == RyujinxVersion.ORIGINAL_PROJECT_LDN:
-            self._notes.add("**⚠️ The old Ryujinx LDN build no longer works. Please update to [this version](https://github.com/GreemDev/Ryujinx/releases/latest).**")
+            raise LogDataError("**The old Ryujinx LDN build no longer works. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>).**")
         elif version_type == RyujinxVersion.ORIGINAL_PROJECT:
-            self._notes.add("**⚠️ It seems you're still using the original Ryujinx. Please update to [this version](https://github.com/GreemDev/Ryujinx/releases/latest), as that's what this Discord server is for.**")
+            self._notes.add("**⚠️ It seems you're still using the original Ryujinx. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for.**")
         elif version_type == RyujinxVersion.MIRROR:
-            self._notes.add(
-                "**⚠️ It seems you're using the other Ryujinx fork, ryujinx-mirror. Please update to [this version](https://github.com/GreemDev/Ryujinx/releases/latest), as that's what this Discord server is for; or go to their Discord server for support.**")
+            raise LogDataError("**It seems you're using the other Ryujinx fork, ryujinx-mirror. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for; or go to their Discord server for support.**")
 
     def get_ryujinx_version(self) -> tuple[RyujinxVersion, str]:
         version_data = self._emu_info["ryu_version"]
