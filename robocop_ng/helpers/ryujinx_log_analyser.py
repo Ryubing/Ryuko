@@ -17,10 +17,15 @@ class CommonError(IntEnum):
     VULKAN_OUT_OF_MEMORY = auto()
 
 
+class AndroidError(TypeError):
+    pass
+
+
 class RyujinxVersion(IntEnum):
     STABLE = auto()
     CANARY = auto()
     PR = auto()
+    ORIGINAL_PROJECT = auto()
     CUSTOM = auto()
 
 class LogAnalyser:
@@ -258,7 +263,12 @@ class LogAnalyser:
                         re.MULTILINE,
                     )
                     if gpu_match is not None and gpu_match.group(1) is not None:
-                        self._hardware_info[setting] = gpu_match.group(1).rstrip()
+                        gpu = gpu_match.group(1).rstrip()
+
+                        if "Mali" in gpu:
+                            raise AndroidError()
+
+                        self._hardware_info[setting] = gpu
 
                 case _:
                     raise NotImplementedError(setting)
@@ -599,14 +609,19 @@ class LogAnalyser:
         version_type, version_str = self.get_ryujinx_version()
         if version_type == RyujinxVersion.CUSTOM:
             self._notes.add("**⚠️ Custom builds are not officially supported**")
+        elif version_type == RyujinxVersion.ORIGINAL_PROJECT:
+            self._notes.add("**⚠️ It seems you're still using the original Ryujinx. Please update to [this version](https://github.com/GreemDev/Ryujinx/releases/latest), as that's what this Discord server is for.**")
 
     def get_ryujinx_version(self) -> tuple[RyujinxVersion, str]:
-        mainline_version = re.compile(r"^\d\.\d\.\d+$")
-        canary_version = re.compile(r"^Canary \d\.\d\.\d+$")
-        pr_version = re.compile(r"^\d\.\d\.\d\+([a-f]|\d){7}$")
+        original_project_version = re.compile(r"^1\.(0|1)\.\d+$")
+        mainline_version = re.compile(r"^1\.2\.\d+$")
+        canary_version = re.compile(r"^Canary 1\.2\.\d+$")
+        pr_version = re.compile(r"^1\.2\.\d\+([a-f]|\d){7}$")
 
         version_data = self._emu_info["ryu_version"]
 
+        if re.match(original_project_version, version_data):
+            return RyujinxVersion.ORIGINAL_PROJECT, version_data
         if re.match(mainline_version, version_data):
             return RyujinxVersion.STABLE, version_data
         elif re.match(canary_version, version_data):

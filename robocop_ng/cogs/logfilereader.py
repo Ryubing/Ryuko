@@ -44,7 +44,7 @@ class LogFileReader(Cog):
         filename = attachment.filename
         ryujinx_log_file_regex = re.compile(r"^Ryujinx_.*\.log$")
         log_file = re.compile(r"^.*\.log|.*\.txt$")
-        is_ryujinx_log_file = re.match(ryujinx_log_file_regex, filename) is not None
+        is_ryujinx_log_file = re.match(ryujinx_log_file_regex, filename) is not None and "Android" not in filename
         is_log_file = re.match(log_file, filename) is not None
 
         return is_log_file, is_ryujinx_log_file
