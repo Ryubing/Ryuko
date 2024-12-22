@@ -26,7 +26,14 @@ class RyujinxVersion(IntEnum):
     CANARY = auto()
     PR = auto()
     ORIGINAL_PROJECT = auto()
+    MIRROR = auto()
     CUSTOM = auto()
+
+original_project_version_pattern = re.compile(r"^1\.(0|1)\.\d+$")
+mainline_version_pattern = re.compile(r"^1\.2\.\d+$")
+canary_version_pattern = re.compile(r"^Canary 1\.2\.\d+$")
+pr_version_pattern = re.compile(r"^1\.2\.\d\+([a-f]|\d){7}$")
+mirror_version_pattern = re.compile(r"^r\.(\d|\w){7}$")
 
 class LogAnalyser:
     _log_text: str
@@ -606,28 +613,30 @@ class LogAnalyser:
             self._notes.add(firmware_warning)
 
         self.__get_settings_notes()
+
         version_type, version_str = self.get_ryujinx_version()
+
         if version_type == RyujinxVersion.CUSTOM:
             self._notes.add("**⚠️ Custom builds are not officially supported**")
         elif version_type == RyujinxVersion.ORIGINAL_PROJECT:
             self._notes.add("**⚠️ It seems you're still using the original Ryujinx. Please update to [this version](https://github.com/GreemDev/Ryujinx/releases/latest), as that's what this Discord server is for.**")
+        elif version_type == RyujinxVersion.MIRROR:
+            self._notes.add(
+                "**⚠️ It seems you're using the other Ryujinx fork, ryujinx-mirror. Please update to [this version](https://github.com/GreemDev/Ryujinx/releases/latest), as that's what this Discord server is for; or go to their Discord server for support.**")
 
     def get_ryujinx_version(self) -> tuple[RyujinxVersion, str]:
-        original_project_version = re.compile(r"^1\.(0|1)\.\d+$")
-        mainline_version = re.compile(r"^1\.2\.\d+$")
-        canary_version = re.compile(r"^Canary 1\.2\.\d+$")
-        pr_version = re.compile(r"^1\.2\.\d\+([a-f]|\d){7}$")
-
         version_data = self._emu_info["ryu_version"]
 
-        if re.match(original_project_version, version_data):
+        if re.match(original_project_version_pattern, version_data):
             return RyujinxVersion.ORIGINAL_PROJECT, version_data
-        if re.match(mainline_version, version_data):
+        if re.match(mainline_version_pattern, version_data):
             return RyujinxVersion.STABLE, version_data
-        elif re.match(canary_version, version_data):
+        elif re.match(canary_version_pattern, version_data):
             return RyujinxVersion.CANARY, version_data.split(" ", maxsplit=2)[1]
-        elif re.match(pr_version, version_data):
+        elif re.match(pr_version_pattern, version_data):
             return RyujinxVersion.PR, version_data
+        elif re.match(mirror_version_pattern, version_data):
+            return RyujinxVersion.MIRROR, version_data
         else:
             return RyujinxVersion.CUSTOM, version_data
 
