@@ -622,7 +622,7 @@ class LogAnalyser:
         if version_type == RyujinxVersion.CUSTOM:
             self._notes.add("**⚠️ Custom builds are not officially supported**")
         elif version_type == RyujinxVersion.ORIGINAL_PROJECT_LDN:
-            raise LogDataError("**The old Ryujinx LDN build no longer works. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>).**")
+            raise LogDataError("**The old Ryujinx LDN build no longer works. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>). *Yes, it has LDN functionality.***")
         elif version_type == RyujinxVersion.ORIGINAL_PROJECT:
             self._notes.add("**⚠️ It seems you're still using the original Ryujinx. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for.**")
         elif version_type == RyujinxVersion.MIRROR:
