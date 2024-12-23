@@ -3,6 +3,7 @@ import os
 import re
 
 import discord
+from discord import Member
 from discord.ext.commands import Cog
 
 from robocop_ng.helpers.checks import check_if_staff
@@ -30,7 +31,7 @@ class Logs(Cog):
         self.susp_hellgex = re.compile(susp_hellgex, re.IGNORECASE)
 
     @Cog.listener()
-    async def on_member_join(self, member):
+    async def on_member_join(self, member: Member):
         await self.bot.wait_until_ready()
 
         if member.guild.id not in self.bot.config.guild_whitelist:
@@ -86,19 +87,22 @@ class Logs(Cog):
             invite_used = "One of: "
             invite_used += ", ".join([x["code"] for x in probable_invites_used])
 
-        # Check if user account is older than 15 minutes
+        # Check if user account is older than defined in config
         age = member.joined_at - member.created_at
         if age < self.bot.config.min_age:
             try:
                 await member.send(
                     f"Your account is too new to "
                     f"join {member.guild.name}."
-                    " Please try again later."
                 )
                 sent = True
             except discord.errors.Forbidden:
                 sent = False
-            await member.kick(reason="Too new")
+
+            if self.bot.config.ban_mode:
+                await member.ban(delete_message_days=7, reason="Account too new")
+            else:
+                await member.kick(reason="Account too new")
 
             msg = (
                 f"🚨 **Account too new**: {member.mention} | "
