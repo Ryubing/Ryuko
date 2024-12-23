@@ -45,7 +45,7 @@ class LogFileReader(Cog):
         ryujinx_log_file_regex = re.compile(r"^Ryujinx_.*\.log$")
         log_file = re.compile(r"^.*\.log|.*\.txt$")
         is_ryujinx_log_file = re.match(ryujinx_log_file_regex, filename) is not None and "Android" not in filename
-        is_log_file = re.match(log_file, filename) is not None
+        is_log_file = re.match(log_file, filename) is not None and "Android" not in filename
 
         return is_log_file, is_ryujinx_log_file
 
@@ -633,7 +633,7 @@ class LogFileReader(Cog):
 
     @commands.cooldown(3, 30, BucketType.channel)
     @commands.command(
-        aliases=["analyselog", "analyse_log", "analyze", "analyzelog", "analyze_log"]
+        aliases=["analyselog", "analyse_log", "analyze", "analyzelog", "analyze_log", "a"]
     )
     async def analyse(self, ctx: Context, attachment_number=1):
         await ctx.message.delete()
@@ -705,12 +705,9 @@ class LogFileReader(Cog):
                         description="\n".join(
                             (
                                 f"Please upload Ryujinx log files to the correct location:\n",
-                                f'<#{self.bot.config.bot_log_allowed_channels["windows-support"]}>: Windows help and troubleshooting',
-                                f'<#{self.bot.config.bot_log_allowed_channels["linux-support"]}>: Linux help and troubleshooting',
-                                f'<#{self.bot.config.bot_log_allowed_channels["macos-support"]}>: macOS help and troubleshooting',
-                                f'<#{self.bot.config.bot_log_allowed_channels["patreon-support"]}>: Help and troubleshooting for Patreon subscribers',
-                                f'<#{self.bot.config.bot_log_allowed_channels["development"]}>: Ryujinx development discussion',
-                                f'<#{self.bot.config.bot_log_allowed_channels["pr-testing"]}>: Discussion of in-progress pull request builds',
+                                f'<#{self.bot.config.bot_log_allowed_channels["help"]}>: Help and troubleshooting',
+                                f'<#{self.bot.config.bot_log_allowed_channels["bot-spam"]}>: If you just want to see what the log analyzer says',
+                                f'<#{self.bot.config.bot_log_allowed_channels["pr-testing"]}>: Discussion of in-progress Pull Request builds',
                             )
                         ),
                         colour=self.ryujinx_blue,
