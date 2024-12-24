@@ -33,7 +33,7 @@ class RyujinxVersion(IntEnum):
 
 original_project_version_pattern = re.compile(r"^1\.(0|1)\.\d+$")
 mainline_version_pattern = re.compile(r"^1\.2\.\d+$")
-canary_version_pattern = re.compile(r"^Canary 1\.2\.\d+$")
+canary_version_pattern = re.compile(r"^c1\.2\.\d+$")
 pr_version_pattern = re.compile(r"^1\.2\.\d\+([a-f]|\d){7}$")
 ldn_version_pattern = re.compile(r"^\d\.\d\.\d-ldn\d+\.\d+(?:\.\d+|$)")
 mirror_version_pattern = re.compile(r"^r\.(\d|\w){7}$")
@@ -51,6 +51,12 @@ class LogAnalyser:
     def is_homebrew(log_file: str) -> bool:
         return (
             re.search("Load.*Application: Loading as [Hh]omebrew", log_file) is not None
+        )
+
+    @staticmethod
+    def is_using_metal(log_file: str) -> bool:
+        return (
+            re.search("Gpu : Backend \\(Metal\\): Metal", log_file) is not None
         )
 
     @staticmethod
@@ -292,7 +298,7 @@ class LogAnalyser:
                             self._emu_info[setting] = line.split()[-1].strip()
                             break
                         if "Ryujinx Canary Version:" in line:
-                            self._emu_info[setting] = "Canary " + line.split()[-1].strip()
+                            self._emu_info[setting] = "c" + line.split()[-1].strip()
                             break
 
                 case "logs_enabled":
@@ -617,6 +623,9 @@ class LogAnalyser:
 
         self.__get_settings_notes()
 
+        if LogAnalyser.is_using_metal(self._log_text):
+            self._notes.add("**⚠️ The Metal backend is experimental. If you're experiencing issues, switch to Vulkan or Auto.**")
+
         version_type = self.get_ryujinx_version()[0]
 
         if version_type == RyujinxVersion.CUSTOM:
@@ -634,7 +643,7 @@ class LogAnalyser:
         if re.match(mainline_version_pattern, version_data):
             return RyujinxVersion.STABLE, version_data
         elif re.match(canary_version_pattern, version_data):
-            return RyujinxVersion.CANARY, version_data.split(" ", maxsplit=2)[1]
+            return RyujinxVersion.CANARY, version_data.lstrip('c')
         if re.match(original_project_version_pattern, version_data):
             return RyujinxVersion.ORIGINAL_PROJECT, version_data
         elif re.match(pr_version_pattern, version_data):
