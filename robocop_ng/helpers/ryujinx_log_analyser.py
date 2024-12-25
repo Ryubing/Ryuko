@@ -633,7 +633,7 @@ class LogAnalyser:
         elif version_type == RyujinxVersion.ORIGINAL_PROJECT_LDN:
             raise LogDataError("**The old Ryujinx LDN build no longer works. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>). *Yes, it has LDN functionality.***")
         elif version_type == RyujinxVersion.ORIGINAL_PROJECT:
-            self._notes.add("**⚠️ It seems you're still using the original Ryujinx. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for.**")
+            raise LogDataError("**⚠️ It seems you're still using the original Ryujinx. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for.**")
         elif version_type == RyujinxVersion.MIRROR:
             raise LogDataError("**It seems you're using the other Ryujinx fork, ryujinx-mirror. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for; or go to their Discord server for support.**")
 
