@@ -460,7 +460,7 @@ class LogAnalyser:
             self._notes.add("\n".join(input_status))
         # If emulator crashes on startup without game load, there is no need to show controller notification at all
         elif self._game_info["game_name"] != "Unknown":
-            self._notes.add("⚠️ No controller information found")
+            self._notes.add("⚠️ No controller information found.")
 
     def __get_os_notes(self):
         if (
@@ -469,11 +469,11 @@ class LogAnalyser:
         ):
             if "Intel" in self._hardware_info["gpu"]:
                 self._notes.add(
-                    "**⚠️ Intel iGPU users should consider using Vulkan graphics backend**"
+                    "**⚠️ Intel iGPU users should consider using Vulkan graphics backend.**"
                 )
             if "AMD" in self._hardware_info["gpu"]:
                 self._notes.add(
-                    "**⚠️ AMD GPU users should consider using Vulkan graphics backend**"
+                    "**⚠️ AMD GPU users should consider using Vulkan graphics backend.**"
                 )
 
         if "macOS" in self._hardware_info["os"] and "Intel" in self._hardware_info["cpu"]:
@@ -481,7 +481,7 @@ class LogAnalyser:
 
     def __get_cpu_notes(self):
         if "VirtualApple" in self._hardware_info["cpu"]:
-            self._notes.add("🔴 **Rosetta should be disabled**")
+            self._notes.add("🔴 **Rosetta should be disabled.**")
 
     def __get_log_notes(self):
         default_logs = ["Info", "Warning", "Error", "Guest"]
@@ -493,7 +493,7 @@ class LogAnalyser:
 
         if "Debug" in user_logs:
             self._notes.add(
-                "⚠️ **Debug logs enabled will have a negative impact on performance**"
+                "⚠️ **Debug logs enabled will have a negative impact on performance.**"
             )
 
         disabled_logs = set(default_logs).difference(set(user_logs))
@@ -508,43 +508,43 @@ class LogAnalyser:
     def __get_settings_notes(self):
         if self._settings["audio_backend"] == "Dummy":
             self._notes.add(
-                "⚠️ Dummy audio backend, consider changing to SDL2 or OpenAL"
+                "⚠️ Dummy audio backend, consider changing to SDL2 or OpenAL."
             )
 
         if self._settings["pptc"] == "Disabled":
-            self._notes.add("🔴 **PPTC cache should be enabled**")
+            self._notes.add("🔴 **PPTC cache should be enabled.**")
 
         if self._settings["shader_cache"] == "Disabled":
-            self._notes.add("🔴 **Shader cache should be enabled**")
+            self._notes.add("🔴 **Shader cache should be enabled.**")
 
         if self._settings["expand_ram"] == "True":
             self._notes.add(
-                "⚠️ `Use alternative memory layout` should only be enabled for 4K mods"
+                "⚠️ `Use alternative memory layout` should only be enabled for 4K mods."
             )
 
         if self._settings["memory_manager"] == "SoftwarePageTable":
             self._notes.add(
-                "🔴 **`Software` setting in Memory Manager Mode will give slower performance than the default setting of `Host unchecked`**"
+                "🔴 **`Software` setting in Memory Manager Mode will give slower performance than the default setting of `Host unchecked`.**"
             )
 
         if self._settings["ignore_missing_services"] == "True":
             self._notes.add(
-                "⚠️ `Ignore Missing Services` being enabled can cause instability"
+                "⚠️ `Ignore Missing Services` being enabled can cause instability."
             )
 
         if self._settings["vsync"] == "Disabled":
             self._notes.add(
-                "⚠️ V-Sync disabled can cause instability like games running faster than intended or longer load times"
+                "⚠️ V-Sync disabled can cause instability like games running faster than intended or longer load times."
             )
 
         if self._settings["fs_integrity"] == "Disabled":
             self._notes.add(
-                "⚠️ Disabling file integrity checks may cause corrupted dumps to not be detected"
+                "⚠️ Disabling file integrity checks may cause corrupted dumps to not be detected."
             )
 
         if self._settings["backend_threading"] == "Off":
             self._notes.add(
-                "🔴 **Graphics Backend Multithreading should be set to `Auto`**"
+                "🔴 **Graphics Backend Multithreading should be set to `Auto`.**"
             )
 
     def __sort_notes(self):
@@ -564,37 +564,37 @@ class LogAnalyser:
             match common_error:
                 case CommonError.SHADER_CACHE_COLLISION:
                     self._notes.add(
-                        "⚠️ Cache collision detected. Investigate possible shader cache issues"
+                        "⚠️ Cache collision detected. Investigate possible shader cache issues."
                     )
                 case CommonError.SHADER_CACHE_CORRUPTION:
                     self._notes.add(
-                        "⚠️ Cache corruption detected. Investigate possible shader cache issues"
+                        "⚠️ Cache corruption detected. Investigate possible shader cache issues."
                     )
                 case CommonError.DUMP_HASH:
                     self._notes.add(
-                        "⚠️ Dump error detected. Investigate possible bad game/firmware dump issues"
+                        "⚠️ Dump error detected. Redump your game, game update and DLC."
                     )
                 case CommonError.UPDATE_KEYS:
                     self._notes.add(
-                        "⚠️ Keys or firmware out of date, consider updating them"
+                        "⚠️ Keys or firmware out of date, consider redumping them."
                     )
                 case CommonError.FILE_PERMISSIONS:
                     self._notes.add(
-                        "⚠️ File permission error. Consider deleting save directory and allowing Ryujinx to make a new one"
+                        "⚠️ File permission error. Consider deleting save directory and allowing Ryujinx to make a new one."
                     )
                 case CommonError.FILE_NOT_FOUND:
                     self._notes.add(
-                        "⚠️ Save not found error. Consider starting game without a save file or using a new save file"
+                        "⚠️ Save not found error. Consider starting game without a save file or using a new save file."
                     )
                 case CommonError.MISSING_SERVICES:
                     if self._settings["ignore_missing_services"] == "False":
                         self._notes.add(
-                            "⚠️ Consider enabling `Ignore Missing Services` in Ryujinx settings"
+                            "⚠️ Consider enabling `Ignore Missing Services` in Ryujinx settings."
                         )
                 case CommonError.VULKAN_OUT_OF_MEMORY:
                     if self._settings["texture_recompression"] == "Disabled":
                         self._notes.add(
-                            "⚠️ Consider enabling `Texture Recompression` in Ryujinx settings"
+                            "⚠️ Consider enabling `Texture Recompression` in Ryujinx settings."
                         )
                 case _:
                     raise NotImplementedError(common_error)
@@ -618,7 +618,7 @@ class LogAnalyser:
             self._emu_info["ryu_firmware"] == "Unknown"
             and self._game_info["game_name"] != "Unknown"
         ):
-            firmware_warning = f"**❌ Nintendo Switch firmware not found**"
+            firmware_warning = f"**❌ Nintendo Switch firmware not found**, consider adding your keys and firmware."
             self._notes.add(firmware_warning)
 
         self.__get_settings_notes()
