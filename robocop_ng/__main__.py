@@ -5,6 +5,7 @@ import sys
 
 import aiohttp
 import discord
+from discord import Message
 from discord.ext import commands
 from discord.ext.commands import CommandError, Context
 
@@ -252,12 +253,19 @@ async def on_command_error(ctx: Context, error: CommandError):
 
 
 @bot.event
-async def on_message(message):
+async def on_message(message: Message):
     if message.author.bot:
         return
 
     if (message.guild) and (message.guild.id not in config.guild_whitelist):
         return
+
+    for phrase in config.blocked_phrases.keys():
+        if phrase in message.content:
+            await message.channel.send(
+                content=config.blocked_phrases[phrase])
+            await message.delete()
+            return
 
     # Ignore messages in newcomers channel, unless it's potentially
     # an allowed command
