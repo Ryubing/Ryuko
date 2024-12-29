@@ -3,7 +3,7 @@ import os
 import re
 
 import discord
-from discord import Member
+from discord import Member, TextChannel, Embed, Color
 from discord.ext.commands import Cog
 
 from robocop_ng.helpers.checks import check_if_staff
@@ -11,6 +11,16 @@ from robocop_ng.helpers.invites import get_invites, set_invites
 from robocop_ng.helpers.restrictions import get_user_restrictions
 from robocop_ng.helpers.userlogs import get_userlog
 
+
+bad_color = Color.red()
+user_joined_color = Color.green()
+user_left_color = Color.brand_red()
+user_unbanned_color = Color.magenta()
+message_edited_color = Color.blurple()
+member_updated_color = Color.blurple()
+
+async def send_log(channel: TextChannel, message: str, color: Color):
+    await channel.send(embed=Embed(description=message, color=color))
 
 class Logs(Cog):
     """
@@ -37,7 +47,7 @@ class Logs(Cog):
         if member.guild.id not in self.bot.config.guild_whitelist:
             return
 
-        log_channel = self.bot.get_channel(self.bot.config.log_channel)
+        log_channel: TextChannel = self.bot.get_channel(self.bot.config.log_channel)
         # We use this a lot, might as well get it once
         escaped_name = self.bot.escape_message(member)
 
@@ -117,7 +127,7 @@ class Logs(Cog):
                     "\nThe user has disabled direct messages, "
                     "so the reason was not sent."
                 )
-            await log_channel.send(msg)
+            await send_log(log_channel, msg, bad_color)
             return
         msg = (
             f"✅ **Join**: {member.mention} | "
@@ -138,7 +148,7 @@ class Logs(Cog):
         warns = get_userlog(self.bot)
         try:
             if len(warns[str(member.id)]["warns"]) == 0:
-                await log_channel.send(msg)
+                await send_log(log_channel, msg, user_joined_color)
             else:
                 embed = discord.Embed(
                     color=discord.Color.dark_red(), title=f"Warns for {escaped_name}"
@@ -152,7 +162,7 @@ class Logs(Cog):
                     )
                 await log_channel.send(msg, embed=embed)
         except KeyError:  # if the user is not in the file
-            await log_channel.send(msg)
+            await send_log(log_channel, msg, user_joined_color)
 
     async def do_spy(self, message):
         if message.author.bot:
@@ -206,11 +216,11 @@ class Logs(Cog):
             return
 
         msg = (
-            f"R11 violating name by {message.author.mention} " f"({message.author.id})."
+            f"Rule violating name by {message.author.mention} " f"({message.author.id})."
         )
 
         spy_channel = self.bot.get_channel(self.bot.config.spylog_channel)
-        await spy_channel.send(msg)
+        await send_log(spy_channel, msg, bad_color)
 
     @Cog.listener()
     async def on_message(self, message):
@@ -251,7 +261,7 @@ class Logs(Cog):
             haste_url = await self.bot.haste(msg)
             msg = f"📝 **Message edit**: \nToo long: <{haste_url}>"
 
-        await log_channel.send(msg)
+        await send_log(log_channel, msg, message_edited_color)
 
     @Cog.listener()
     async def on_message_delete(self, message):
@@ -272,7 +282,7 @@ class Logs(Cog):
             haste_url = await self.bot.haste(msg)
             msg = f"🗑️ **Message delete**: \nToo long: <{haste_url}>"
 
-        await log_channel.send(msg)
+        await send_log(log_channel, msg, bad_color)
 
     @Cog.listener()
     async def on_member_remove(self, member):
@@ -287,7 +297,7 @@ class Logs(Cog):
             f"{self.bot.escape_message(member)}\n"
             f"🏷 __User ID__: {member.id}"
         )
-        await log_channel.send(msg)
+        await send_log(log_channel, msg, user_left_color)
 
     @Cog.listener()
     async def on_member_ban(self, guild, member):
@@ -302,7 +312,7 @@ class Logs(Cog):
             f"{self.bot.escape_message(member)}\n"
             f"🏷 __User ID__: {member.id}"
         )
-        await log_channel.send(msg)
+        await send_log(log_channel, msg, user_left_color)
 
     @Cog.listener()
     async def on_member_unban(self, guild, user):
@@ -326,7 +336,8 @@ class Logs(Cog):
         #         timebans.pop(user.id)
         #         with open("data/timebans.json", "w") as f:
         #             json.dump(timebans, f)
-        await log_channel.send(msg)
+
+        await send_log(log_channel, msg, user_unbanned_color)
 
     @Cog.listener()
     async def on_member_update(self, member_before, member_after):
@@ -385,7 +396,7 @@ class Logs(Cog):
                 f"ℹ️ **Member update**: {member_after.mention} | "
                 f"{self.bot.escape_message(member_after)}{msg}"
             )
-            await log_channel.send(msg)
+            await send_log(log_channel, msg,member_updated_color)
 
 
 async def setup(bot):

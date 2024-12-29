@@ -605,7 +605,7 @@ class LogFileReader(Cog):
                 logging.warning(error)
             except Exception as error:
                 error_message = str(error)
-                if error_message is not "":
+                if error_message != "":
                     error_message = ":\n\n" + error_message
 
                 await reply_message.edit(
