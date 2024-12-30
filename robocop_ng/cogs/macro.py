@@ -1,3 +1,6 @@
+import json
+from typing import Any
+
 import discord
 from discord.ext import commands
 from discord.ext.commands import Cog, Context, BucketType, Greedy
@@ -14,10 +17,35 @@ from robocop_ng.helpers.macros import (
     clear_aliases,
 )
 
+from robocop_ng.__main__ import log
+
+import os.path
+
 
 class Macro(Cog):
+
+    @staticmethod
+    def import_volte_guild_data_tags(self):
+        volte_data = self.bot.state_dir + "/../volteGuildData.json"
+        if not os.path.exists(volte_data):
+            return
+
+        loaded_guild_data: Any
+
+        with open(volte_data, "r") as f:
+            loaded_guild_data = json.load(f)
+
+        tags = loaded_guild_data["extras"]["tags"]
+
+        for tag in tags:
+            add_macro(self.bot, tag["name"], tag["content"])
+
+        os.remove(volte_data)
+
     def __init__(self, bot):
         self.bot = bot
+        Macro.import_volte_guild_data_tags(self)
+
 
     @commands.cooldown(3, 30, BucketType.user)
     @commands.command(aliases=["m"])
