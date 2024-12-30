@@ -17,8 +17,6 @@ from robocop_ng.helpers.macros import (
     clear_aliases,
 )
 
-from robocop_ng.__main__ import log
-
 import os.path
 
 
@@ -28,7 +26,7 @@ class Macro(Cog):
     def import_volte_guild_data_tags(self):
         volte_data = self.bot.state_dir + "/volteGuildData.json"
         if not os.path.exists(volte_data):
-            volte_data = "/volteGuildData.json"
+            volte_data = "volteGuildData.json"
             if not os.path.exists(volte_data):
                 return
 
