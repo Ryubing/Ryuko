@@ -325,6 +325,12 @@ class LogAnalyser:
         ]
         if len(values) > 0:
             value = values[-1]
+        elif name == "vsync":
+            return "Enabled"
+        elif name == "texture_recompression":
+            return "Disabled"
+        elif name == "graphics_backend":
+            return "Vulkan"
         else:
             return None
 
@@ -372,7 +378,7 @@ class LogAnalyser:
                 else:
                     return "Unknown"
 
-            case "pptc" | "shader_cache" | "texture_recompression" | "vsync":
+            case "pptc" | "shader_cache" | "texture_recompression":
                 return "Enabled" if value == "True" else "Disabled"
 
             case "hypervisor":
@@ -380,6 +386,8 @@ class LogAnalyser:
                     return "Enabled" if value == "True" else "Disabled"
                 else:
                     return "N/A"
+            case "expand_ram":
+                return value.replace("MemoryConfiguration", "")
             case _:
                 return value
 
@@ -390,7 +398,7 @@ class LogAnalyser:
             "audio_backend": "AudioBackend",
             "backend_threading": "BackendThreading",
             "docked": "EnableDockedMode",
-            "expand_ram": "ExpandRam",
+            "expand_ram": "DramSize",
             "fs_integrity": "EnableFsIntegrityChecks",
             "graphics_backend": "GraphicsBackend",
             "ignore_missing_services": "IgnoreMissingServices",
@@ -399,7 +407,7 @@ class LogAnalyser:
             "resolution_scale": "ResScale",
             "shader_cache": "EnableShaderCache",
             "texture_recompression": "EnableTextureRecompression",
-            "vsync": "EnableVsync",
+            "vsync": "VSyncMode",
             "hypervisor": "UseHypervisor",
         }
 
@@ -517,9 +525,9 @@ class LogAnalyser:
         if self._settings["shader_cache"] == "Disabled":
             self._notes.add("🔴 **Shader cache should be enabled.**")
 
-        if self._settings["expand_ram"] == "True":
+        if (self._settings["expand_ram"] is not None) and "4K" not in self._game_info["mods"]:
             self._notes.add(
-                "⚠️ `Use alternative memory layout` should only be enabled for 4K mods."
+                "⚠️ `DRAM size` should only be increased for 4K mods."
             )
 
         if self._settings["memory_manager"] == "SoftwarePageTable":
@@ -532,7 +540,7 @@ class LogAnalyser:
                 "⚠️ `Ignore Missing Services` being enabled can cause instability."
             )
 
-        if self._settings["vsync"] == "Disabled":
+        if self._settings["vsync"] == "Unbounded":
             self._notes.add(
                 "⚠️ V-Sync disabled can cause instability like games running faster than intended or longer load times."
             )
