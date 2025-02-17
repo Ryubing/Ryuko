@@ -426,13 +426,13 @@ tornado = ["tornado"]
 
 [[package]]
 name = "humanize"
-version = "4.11.0"
+version = "4.12.0"
 description = "Python humanize utilities"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "humanize-4.11.0-py3-none-any.whl", hash = "sha256:b53caaec8532bcb2fff70c8826f904c35943f8cecaca29d272d9df38092736c0"},
-    {file = "humanize-4.11.0.tar.gz", hash = "sha256:e66f36020a2d5a974c504bd2555cf770621dbdbb6d82f94a6857c0b1ea2608be"},
+    {file = "humanize-4.12.0-py3-none-any.whl", hash = "sha256:106a7436a2d545d742c147c469716b3a08424aa143a82103630147c489a89f48"},
+    {file = "humanize-4.12.0.tar.gz", hash = "sha256:87ff7b43591370b12a1d103c9405849d911d4b039ed22d80b718b62c76eec8a3"},
 ]
 
 [package.extras]
@@ -821,4 +821,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "6b4d35b268bb3ba397f43d223bf90a995e0e43ccff0c8214ebe59f2373c14fb8"
+content-hash = "559deb218630db0ab6df6a1be03dfebe2457a738358017cbbf52adb11cd36c28"
