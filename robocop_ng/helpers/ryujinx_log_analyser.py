@@ -22,6 +22,7 @@ class LogDataError(RuntimeError):
     def __init__(self, message: str):
         self.add_note(message)
 
+
 class RyujinxVersion(IntEnum):
     STABLE = auto()
     CANARY = auto()
@@ -31,12 +32,14 @@ class RyujinxVersion(IntEnum):
     MIRROR = auto()
     CUSTOM = auto()
 
+
 original_project_version_pattern = re.compile(r"^1\.(0|1)\.\d+$")
 mainline_version_pattern = re.compile(r"^1\.2\.\d+$")
 canary_version_pattern = re.compile(r"^c1\.2\.\d+$")
 pr_version_pattern = re.compile(r"^1\.2\.\d\+([a-f]|\d){7}$")
 ldn_version_pattern = re.compile(r"^\d\.\d\.\d-ldn\d+\.\d+(?:\.\d+|$)")
 mirror_version_pattern = re.compile(r"^r\.(\d|\w){7}$")
+
 
 class LogAnalyser:
     _log_text: str
@@ -55,9 +58,7 @@ class LogAnalyser:
 
     @staticmethod
     def is_using_metal(log_file: str) -> bool:
-        return (
-            re.search("Gpu : Backend \\(Metal\\): Metal", log_file) is not None
-        )
+        return re.search("Gpu : Backend \\(Metal\\): Metal", log_file) is not None
 
     @staticmethod
     def get_filepaths(log_file: str) -> set[str]:
@@ -484,7 +485,10 @@ class LogAnalyser:
                     "**⚠️ AMD GPU users should consider using Vulkan graphics backend.**"
                 )
 
-        if "macOS" in self._hardware_info["os"] and "Intel" in self._hardware_info["cpu"]:
+        if (
+            "macOS" in self._hardware_info["os"]
+            and "Intel" in self._hardware_info["cpu"]
+        ):
             self._notes.add("**⚠️ Intel Macs are not supported.**")
 
     def __get_cpu_notes(self):
@@ -525,10 +529,10 @@ class LogAnalyser:
         if self._settings["shader_cache"] == "Disabled":
             self._notes.add("🔴 **Shader cache should be enabled.**")
 
-        if (self._settings["expand_ram"] is not None) and "4K" not in self._game_info["mods"]:
-            self._notes.add(
-                "⚠️ `DRAM size` should only be increased for 4K mods."
-            )
+        if (self._settings["expand_ram"] is not None) and "4K" not in self._game_info[
+            "mods"
+        ]:
+            self._notes.add("⚠️ `DRAM size` should only be increased for 4K mods.")
 
         if self._settings["memory_manager"] == "SoftwarePageTable":
             self._notes.add(
@@ -632,18 +636,26 @@ class LogAnalyser:
         self.__get_settings_notes()
 
         if LogAnalyser.is_using_metal(self._log_text):
-            self._notes.add("**⚠️ The Metal backend is experimental. If you're experiencing issues, switch to Vulkan or Auto.**")
+            self._notes.add(
+                "**⚠️ The Metal backend is experimental. If you're experiencing issues, switch to Vulkan or Auto.**"
+            )
 
         version_type = self.get_ryujinx_version()[0]
 
         if version_type == RyujinxVersion.CUSTOM:
             self._notes.add("**⚠️ Custom builds are not officially supported**")
         elif version_type == RyujinxVersion.ORIGINAL_PROJECT_LDN:
-            raise LogDataError("**The old Ryujinx LDN build no longer works. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>). *Yes, it has LDN functionality.***")
+            raise LogDataError(
+                "**The old Ryujinx LDN build no longer works. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>). *Yes, it has LDN functionality.***"
+            )
         elif version_type == RyujinxVersion.ORIGINAL_PROJECT:
-            raise LogDataError("**⚠️ It seems you're still using the original Ryujinx. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for.**")
+            raise LogDataError(
+                "**⚠️ It seems you're still using the original Ryujinx. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for.**"
+            )
         elif version_type == RyujinxVersion.MIRROR:
-            raise LogDataError("**It seems you're using the other Ryujinx fork, ryujinx-mirror. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for; or go to their Discord server for support.**")
+            raise LogDataError(
+                "**It seems you're using the other Ryujinx fork, ryujinx-mirror. Please update to [this version](<https://github.com/GreemDev/Ryujinx/releases/latest>), as that's what this Discord server is for; or go to their Discord server for support.**"
+            )
 
     def get_ryujinx_version(self) -> tuple[RyujinxVersion, str]:
         version_data = self._emu_info["ryu_version"]
@@ -651,7 +663,7 @@ class LogAnalyser:
         if re.match(mainline_version_pattern, version_data):
             return RyujinxVersion.STABLE, version_data
         elif re.match(canary_version_pattern, version_data):
-            return RyujinxVersion.CANARY, version_data.lstrip('c')
+            return RyujinxVersion.CANARY, version_data.lstrip("c")
         if re.match(original_project_version_pattern, version_data):
             return RyujinxVersion.ORIGINAL_PROJECT, version_data
         elif re.match(pr_version_pattern, version_data):
