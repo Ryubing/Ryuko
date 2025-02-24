@@ -262,8 +262,7 @@ async def on_message(message: Message):
 
     for phrase in config.blocked_phrases.keys():
         if phrase in message.content:
-            await message.channel.send(
-                content=config.blocked_phrases[phrase])
+            await message.channel.send(content=config.blocked_phrases[phrase])
             await message.delete()
             return
 
