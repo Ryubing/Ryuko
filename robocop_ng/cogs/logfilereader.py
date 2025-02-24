@@ -44,8 +44,13 @@ class LogFileReader(Cog):
         filename = attachment.filename
         ryujinx_log_file_regex = re.compile(r"^Ryujinx_.*\.log$")
         log_file = re.compile(r"^.*\.log|.*\.txt$")
-        is_ryujinx_log_file = re.match(ryujinx_log_file_regex, filename) is not None and "Android" not in filename
-        is_log_file = re.match(log_file, filename) is not None and "Android" not in filename
+        is_ryujinx_log_file = (
+            re.match(ryujinx_log_file_regex, filename) is not None
+            and "Android" not in filename
+        )
+        is_log_file = (
+            re.match(log_file, filename) is not None and "Android" not in filename
+        )
 
         return is_log_file, is_ryujinx_log_file
 
@@ -169,7 +174,9 @@ class LogFileReader(Cog):
         await message.delete()
         return embed
 
-    def format_analysed_log(self, author_name: str, analyser: LogAnalyser, analysed_log):
+    def format_analysed_log(
+        self, author_name: str, analyser: LogAnalyser, analysed_log
+    ):
         cleaned_game_name = re.sub(
             r"\s\[(64|32)-bit\]$", "", analysed_log["game_info"]["game_name"]
         )
@@ -633,7 +640,14 @@ class LogFileReader(Cog):
 
     @commands.cooldown(3, 30, BucketType.channel)
     @commands.command(
-        aliases=["analyselog", "analyse_log", "analyze", "analyzelog", "analyze_log", "a"]
+        aliases=[
+            "analyselog",
+            "analyse_log",
+            "analyze",
+            "analyzelog",
+            "analyze_log",
+            "a",
+        ]
     )
     async def analyse(self, ctx: Context, attachment_number=1):
         await ctx.message.delete()
