@@ -19,8 +19,10 @@ user_unbanned_color = Color.magenta()
 message_edited_color = Color.blurple()
 member_updated_color = Color.blurple()
 
+
 async def send_log(channel: TextChannel, message: str, color: Color):
     await channel.send(embed=Embed(description=message, color=color))
+
 
 class Logs(Cog):
     """
@@ -102,8 +104,7 @@ class Logs(Cog):
         if age < self.bot.config.min_age:
             try:
                 await member.send(
-                    f"Your account is too new to "
-                    f"join {member.guild.name}."
+                    f"Your account is too new to " f"join {member.guild.name}."
                 )
                 sent = True
             except discord.errors.Forbidden:
@@ -216,7 +217,8 @@ class Logs(Cog):
             return
 
         msg = (
-            f"Rule violating name by {message.author.mention} " f"({message.author.id})."
+            f"Rule violating name by {message.author.mention} "
+            f"({message.author.id})."
         )
 
         spy_channel = self.bot.get_channel(self.bot.config.spylog_channel)
@@ -396,7 +398,7 @@ class Logs(Cog):
                 f"ℹ️ **Member update**: {member_after.mention} | "
                 f"{self.bot.escape_message(member_after)}{msg}"
             )
-            await send_log(log_channel, msg,member_updated_color)
+            await send_log(log_channel, msg, member_updated_color)
 
 
 async def setup(bot):

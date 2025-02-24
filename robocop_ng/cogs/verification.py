@@ -55,7 +55,7 @@ class Verification(Cog):
             else:
                 # we've hit the limit; split!
                 messages += [current_message]
-                current_message = "\n\u200B\n" + item + "\n\u200B\n"
+                current_message = "\n\u200b\n" + item + "\n\u200b\n"
                 total = 0
         messages += [current_message]
 
