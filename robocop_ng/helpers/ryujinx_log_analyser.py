@@ -32,8 +32,8 @@ class RyujinxVersion(IntEnum):
     CUSTOM = auto()
 
 original_project_version_pattern = re.compile(r"^1\.(0|1)\.\d+$")
-mainline_version_pattern = re.compile(r"^1\.2\.\d+$")
-canary_version_pattern = re.compile(r"^c1\.2\.\d+$")
+mainline_version_pattern = re.compile(r"^1\.(2|3)\.\d+$")
+canary_version_pattern = re.compile(r"^c1\.(2|3)\.\d+$")
 pr_version_pattern = re.compile(r"^1\.2\.\d\+([a-f]|\d){7}$")
 ldn_version_pattern = re.compile(r"^\d\.\d\.\d-ldn\d+\.\d+(?:\.\d+|$)")
 mirror_version_pattern = re.compile(r"^r\.(\d|\w){7}$")
